@@ -5,6 +5,8 @@
 > **Status:** ⚪ Not Started
 > **Estimated Effort:** 2 days
 
+> **Impact from M1-T4:** Agent metrics are already published to Redis channels `metrics:{agent_id}` and `vllm_metrics:{agent_id}` by the agent WebSocket handler. This task needs to create a *dashboard* WebSocket endpoint (`/ws/dashboard/{agent_id}`) that subscribes to these Redis channels and forwards to browser clients. The `PubSubHelper` class in `app/redis.py` can be used for subscription. Connection state is tracked in Redis at `agent:{id}:ws_connected` (TTL-based). Running vLLM instances are stored at `agent:{id}:running_instances`.
+
 ## Description
 
 Implement the pipeline that broadcasts real-time metrics from the backend to browser-based dashboard clients. Metrics arrive from agents via WebSocket and are published to Redis pub/sub channels. A dashboard WebSocket endpoint at `/ws/dashboard/{agent_id}` (or `/ws/dashboard` for all agents) subscribes to these channels and forwards metrics to connected browser clients.

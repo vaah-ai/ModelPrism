@@ -1,17 +1,17 @@
-"""Agent management service — business logic for agent registration.
+"""Agent management service — business logic for agent registration and connection management.
 
-Provides the core operations for the two-phase agent registration flow:
-1. Create a registration token (dashboard/admin action)
-2. Claim an agent (phase 1 — token + hostname)
-3. Complete registration (phase 2 — hardware details)
-4. List and get agents
+Provides the core operations for the two-phase agent registration flow
+and the ``AgentConnectionRegistry`` for tracking active WebSocket
+connections.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -26,6 +26,8 @@ from app.utils.naming import generate_unique_name
 
 if TYPE_CHECKING:
     from uuid import UUID
+
+    from app.schemas.ws_messages import CommandMessage
 
 logger = logging.getLogger(__name__)
 
@@ -321,3 +323,135 @@ def _ensure_str(value: object) -> str | None:
     if value is None:
         return None
     return str(value)
+
+
+# ── Connection Registry ────────────────────────────────────────────
+
+
+@dataclass
+class PendingCommand:
+    """A command sent to an agent that has not yet been completed."""
+
+    command_id: str
+    command: str
+    sent_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+class AgentConnectionRegistry:
+    """Thread-safe registry of active agent WebSocket connections.
+
+    Provides:
+    - ``register`` — add or replace a connection (closes stale ones)
+    - ``unregister`` — remove a connection and return its pending commands
+    - ``send_command`` — deliver a command to a connected agent
+    - ``broadcast_shutdown`` — notify all connected agents of server shutdown
+    - ``get_active_ids`` — list all currently connected agent IDs
+    - ``get_online_count`` — number of currently connected agents
+    """
+
+    def __init__(self) -> None:
+        self._connections: dict[UUID, Any] = {}
+        self._pending_commands: dict[UUID, dict[str, PendingCommand]] = {}
+        self._lock = asyncio.Lock()
+
+    async def register(self, agent_id: UUID, ws: Any) -> None:
+        """Register (or replace) a WebSocket connection for an agent.
+
+        If a connection already exists for this ``agent_id``, the old
+        connection is force-closed with code 1008 ("Replaced by new
+        connection") before accepting the new one.
+        """
+        async with self._lock:
+            old_ws = self._connections.get(agent_id)
+            if old_ws is not None:
+                logger.warning("Replacing stale connection for agent %s", agent_id)
+                try:
+                    await old_ws.close(code=1008, reason="Replaced by new connection")
+                except Exception:
+                    logger.debug("Error closing stale connection for agent %s", agent_id)
+            self._connections[agent_id] = ws
+            self._pending_commands.setdefault(agent_id, {})
+
+    async def unregister(self, agent_id: UUID) -> dict[str, PendingCommand]:
+        """Remove a connection and return its pending commands.
+
+        The pending commands are returned so the caller can mark them
+        as failed (e.g. due to agent disconnect).
+        """
+        async with self._lock:
+            self._connections.pop(agent_id, None)
+            return self._pending_commands.pop(agent_id, {})
+
+    async def send_command(
+        self,
+        agent_id: UUID,
+        command: CommandMessage,
+    ) -> bool:
+        """Deliver a command to a connected agent over its WebSocket.
+
+        Returns ``True`` if the agent was connected and the command was
+        sent, ``False`` if the agent is not connected.
+
+        The command is tracked as pending until a ``command_result`` is
+        received.
+        """
+        async with self._lock:
+            ws = self._connections.get(agent_id)
+            if ws is None:
+                return False
+            self._pending_commands[agent_id][command.command_id] = PendingCommand(
+                command_id=command.command_id,
+                command=command.command,
+            )
+            await ws.send_json(command.model_dump())
+            return True
+
+    async def resolve_command(
+        self,
+        agent_id: UUID,
+        command_id: str,
+    ) -> PendingCommand | None:
+        """Mark a command as resolved (completed) and return it.
+
+        Returns the ``PendingCommand`` if it was tracked, or ``None``
+        if the command_id was unknown (e.g. duplicate response).
+        """
+        async with self._lock:
+            pending = self._pending_commands.get(agent_id)
+            if pending is None:
+                return None
+            return pending.pop(command_id, None)
+
+    async def broadcast_shutdown(self, reconnect_delay_seconds: int = 10) -> int:
+        """Send a shutdown message to every connected agent.
+
+        Returns the number of agents that were notified.
+        """
+
+        from app.schemas.ws_messages import ShutdownMessage
+
+        shutdown = ShutdownMessage(reconnect_delay_seconds=reconnect_delay_seconds)
+        payload = shutdown.model_dump_json()
+        count = 0
+        async with self._lock:
+            for agent_id, ws in list(self._connections.items()):
+                try:
+                    await ws.send_text(payload)
+                    count += 1
+                except Exception:
+                    logger.warning("Failed to send shutdown to agent %s", agent_id)
+        return count
+
+    async def get_active_ids(self) -> list[UUID]:
+        """Return the list of currently connected agent UUIDs."""
+        async with self._lock:
+            return list(self._connections.keys())
+
+    async def get_online_count(self) -> int:
+        """Return the number of currently connected agents."""
+        async with self._lock:
+            return len(self._connections)
+
+
+# Singleton — import this everywhere
+agent_registry = AgentConnectionRegistry()

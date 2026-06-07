@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** Critical
-> **Status:** ⚪ Not Started
+> **Status:** 🟢 Complete
 > **Estimated Effort:** 3 days
 
 > **Impact from M1-T3:** Agent Registration API is now implemented. Agents receive a persistent agent_id (UUID string) and ws_url during registration. WS URL format: `ws://localhost:8000/ws/agents/{agent_id}`. The Agent model stores status (online/offline), last_seen_at, and hardware info (gpu_info/cpu_info/disk_info as JSONB). Registration is two-phase: claim (agent_id + ws_url) → complete (hardware). Use `app/services/agent_manager.py` `get_agent()` for agent lookup by UUID. The `app/api/agents.py` router is at `/api/agents` prefix.

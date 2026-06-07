@@ -73,6 +73,16 @@ class Settings(BaseSettings):
         description="Max minutes between claim and complete during two-phase registration",
     )
 
+    # --- WebSocket ---
+    ws_heartbeat_timeout_seconds: int = Field(
+        default=45,
+        description="Seconds without a heartbeat before marking agent offline",
+    )
+    ws_reconnect_delay_seconds: int = Field(
+        default=10,
+        description="Reconnect delay sent to agents on server shutdown",
+    )
+
     # --- Application ---
     cors_origins: str = Field(
         default="http://localhost:3000",

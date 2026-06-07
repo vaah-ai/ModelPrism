@@ -36,6 +36,8 @@ from app.database import close_db, engine
 from app.logging_config import setup_logging
 from app.middleware.correlation import CorrelationIDMiddleware
 from app.redis import close_redis, init_redis, verify_redis_connection
+from app.services.agent_manager import agent_registry
+from app.ws.agent_ws import router as agent_ws_router
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +130,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # ---- Shutdown ----
     logger.info("Shutting down ModelPrism Backend...")
+    # Notify all connected agents of graceful shutdown
+    try:
+        notified = await agent_registry.broadcast_shutdown(
+            reconnect_delay_seconds=settings.ws_reconnect_delay_seconds,
+        )
+        if notified:
+            logger.info("Sent shutdown notification to %d agent(s)", notified)
+            import asyncio
+
+            await asyncio.sleep(min(10, settings.ws_reconnect_delay_seconds))
+    except Exception:
+        logger.warning("Error during agent shutdown broadcast")
     await close_db()
     await close_redis()
     logger.info("Shutdown complete")
@@ -164,6 +178,9 @@ app.mount("/metrics", metrics_app)
 
 # --- API Routes ---
 app.include_router(api_router, prefix="/api")
+
+# --- WebSocket Routes ---
+app.include_router(agent_ws_router)
 
 # --- Health Check ---
 
