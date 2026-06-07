@@ -8,7 +8,21 @@
 
 | ID | Title | Status | Priority | Tasks | Dependencies |
 |----|-------|--------|----------|-------|--------------|
-| M1 | Foundation — Backend + Agent | ⚪ Not Started | Critical | 0/0 | None |
+| M1 | Foundation — Backend + Agent + Dashboard | 🔵 In Progress | Critical | 0/9 🔵 In Progress | None |
+
+### M1 Task Status
+
+| ID | Title | Status | Priority | Effort | Dependencies |
+|----|-------|--------|----------|--------|--------------|
+| M1-T1 | Backend Scaffolding | ⚪ Not Started | Critical | 2 days | None |
+| M1-T2 | Database Schema | ⚪ Not Started | Critical | 3 days | M1-T1 |
+| M1-T3 | Agent Registration API | ⚪ Not Started | Critical | 2 days | M1-T1, M1-T2 |
+| M1-T4 | Agent WebSocket Handler | ⚪ Not Started | Critical | 3 days | M1-T3 |
+| M1-T5 | Agent Package | ⚪ Not Started | Critical | 4 days | M1-T4 |
+| M1-T6 | Metric Storage + API | ⚪ Not Started | High | 3 days | M1-T1, M1-T2, M1-T4 |
+| M1-T7 | Dashboard WS Broadcast | ⚪ Not Started | High | 2 days | M1-T4, M1-T6 |
+| M1-T8 | Nuxt Dashboard Scaffold | ⚪ Not Started | Critical | 2 days | None |
+| M1-T9 | Dashboard Pages | ⚪ Not Started | High | 4 days | M1-T7, M1-T8 |
 
 ## Backlog
 
@@ -22,3 +36,6 @@
 - **Dashboard app:** `/Users/pk/Projects/ai-models-hosting/dashboard-gpu-server/`
 - **Agent submodule:** `/Users/pk/Projects/ModelPrism/modelprism-agent/`
 - **Planner prompt:** `/Users/pk/Projects/ModelPrism/ai-prompts/prompt-ai-milestones-tasks-planner.md`
+- **Milestone M1 folder:** `/Users/pk/Projects/ModelPrism/ai-milestones-and-tasks/milestone-01-foundation/`
+- **M1 tasks:** 9 tasks total, estimated ~3-4 weeks effort
+- **Architecture decision:** Dashboard consumes FastAPI directly (`nitro: false` in Nuxt config)
