@@ -46,6 +46,6 @@
 |----|-------|--------|----------|--------------|
 | M1-T8-P1 | UI/UX Polish (ui-ux-pro-max + frontend-design) | 🟢 Complete | Medium | M1-T8 |
 | M1-T8-P2 | Light & Dark Mode Toggle | 🟢 Complete | Medium | M1-T8-P1 |
-| M1-T8-P3/P4 | PrimeVue Icons Fix + Responsive Verification | 🔵 In Progress | High | M1-T8 |
+| M1-T8-P3/P4 | PrimeVue Icons Fix + Responsive Verification | 🟢 Complete | High | M1-T8 |
 
 > **Note:** M1-T8-P3 and M1-T8-P4 were merged into a single combined task. See `milestone-01-foundation/task-M1-T8-P3-P4-primevue-icons-and-responsive.md`.

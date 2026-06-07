@@ -4,7 +4,7 @@
     <Transition name="sidebar">
       <div
         v-if="sidebarOpen"
-        class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+        class="fixed inset-0 z-[60] bg-black/50 lg:hidden"
         @click="sidebarOpen = false"
       />
     </Transition>
@@ -25,7 +25,7 @@
           >
         </NuxtLink>
         <button
-          class="flex h-8 w-8 items-center justify-center rounded-lg lg:hidden"
+          class="flex h-11 w-11 items-center justify-center rounded-lg lg:hidden"
           style="color: var(--text-muted)"
           @click="sidebarOpen = false"
         >
@@ -55,7 +55,7 @@
       >
         <div class="flex items-center gap-3">
           <button
-            class="flex h-10 w-10 items-center justify-center rounded-lg"
+            class="flex h-11 w-11 items-center justify-center rounded-lg"
             style="color: var(--text-secondary)"
             @click="sidebarOpen = !sidebarOpen"
           >
@@ -73,7 +73,7 @@
             rounded
             severity="secondary"
             :pt="{
-              root: { class: 'h-10 w-10' },
+              root: { class: 'h-11 w-11' },
             }"
             :aria-label="themeLabel"
             :v-tooltip="themeLabel"
@@ -102,7 +102,7 @@ const {
   currentIcon: themeIcon,
   currentLabel: themeLabel,
   cycleTheme,
-} = useTheme()
+} = useTheme();
 
 const pageTitle = computed(() => {
   const name = (route.name as string) || "";
