@@ -31,7 +31,8 @@ logger = logging.getLogger(__name__)
 
 _TIER_CHAIN: list[tuple[str, str, int]] = [
     # (source_tier, target_tier, bucket_window_seconds)
-    ("raw", "t1m", 60),
+    ("raw", "t10s", 10),
+    ("t10s", "t1m", 60),
     ("t1m", "t10m", 600),
     ("t10m", "t1h", 3600),
     ("t1h", "t6h", 21600),

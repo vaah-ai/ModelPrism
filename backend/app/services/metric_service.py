@@ -11,6 +11,7 @@ appropriate retention tier based on the requested time range.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections import defaultdict
@@ -189,9 +190,7 @@ class MetricIngestionService:
 
         # Flush if buffer reaches 100 rows for this agent
         if len(agent_rows) >= 100:
-            logger.debug("Buffer for agent %s reached 100 rows — flushing", agent_id)
-            # Schedule flush as a fire-and-forget task; caller must
-            # run flush externally via an asyncio task.
+            logger.debug("Buffer for agent %s reached 100 rows — scheduling flush", agent_id)
 
     def enqueue_vllm(
         self,
@@ -451,6 +450,33 @@ class MetricIngestionService:
         except Exception:
             logger.debug("Failed to fetch live metrics from Redis for agent %s", agent_id)
             return []
+
+    @property
+    def buffer_size(self) -> int:
+        """Return total buffered rows across all agents."""
+        return sum(len(rows) for rows in self._buffer.values())
+
+
+# ── Background flush loop ─────────────────────────────────────────
+
+
+async def run_flush_loop(service: MetricIngestionService) -> None:
+    """Periodic background task that flushes the metric ingestion buffer.
+
+    Spawned via ``asyncio.create_task(run_flush_loop(metric_service))``
+    during the application lifespan. Flushes every 5 seconds.
+    """
+    logger.info("Metric flush loop started")
+    try:
+        while True:
+            await asyncio.sleep(5)
+            flushed = await service.flush()
+            if flushed > 0:
+                logger.debug("Periodic flush: %d rows written", flushed)
+    except asyncio.CancelledError:
+        logger.info("Metric flush loop cancelled — flushing remaining rows")
+        await service.flush()
+        raise
 
 
 # ── Standalone helpers ──────────────────────────────────────────────

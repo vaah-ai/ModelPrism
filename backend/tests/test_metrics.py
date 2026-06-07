@@ -408,12 +408,12 @@ class TestAvgGpuField:
 class TestDownsamplerConfig:
     """Verify the downsampler tier chain and retention configuration."""
 
-    def test_tier_chain_has_four_steps(self) -> None:
+    def test_tier_chain_has_five_steps(self) -> None:
         from app.services.downsampler import _TIER_CHAIN
 
-        assert len(_TIER_CHAIN) == 4
-        assert _TIER_CHAIN[0] == ("raw", "t1m", 60)
-        assert _TIER_CHAIN[3] == ("t1h", "t6h", 21600)
+        assert len(_TIER_CHAIN) == 5
+        assert _TIER_CHAIN[0] == ("raw", "t10s", 10)
+        assert _TIER_CHAIN[4] == ("t1h", "t6h", 21600)
 
     def test_retention_has_all_tiers(self) -> None:
         from app.services.downsampler import _TIER_RETENTION

@@ -166,8 +166,6 @@ async def _handle_metrics(agent_id: UUID, data: dict[str, Any]) -> None:
     try:
         ts_float = data.get("ts", 0)
         if isinstance(ts_float, (int, float)) and ts_float > 0:
-            from datetime import UTC, datetime
-
             ts = datetime.fromtimestamp(ts_float, tz=UTC)
         else:
             ts = datetime.now(UTC)
@@ -214,8 +212,6 @@ async def _handle_vllm_metrics(agent_id: UUID, data: dict[str, Any]) -> None:
     try:
         ts_float = data.get("ts", 0)
         if isinstance(ts_float, (int, float)) and ts_float > 0:
-            from datetime import UTC, datetime
-
             ts = datetime.fromtimestamp(ts_float, tz=UTC)
         else:
             ts = datetime.now(UTC)
@@ -232,7 +228,7 @@ async def _handle_vllm_metrics(agent_id: UUID, data: dict[str, Any]) -> None:
             ttft_p99_ms=data.get("ttft_p99_ms"),
             tps=data.get("tps"),
             gpu_cache_pct=data.get("gpu_cache_pct"),
-            prefix_cache_hit=data.get("prefix_cache_hit"),
+            prefix_cache_hit=data.get("prefix_cache_hit_pct", data.get("prefix_cache_hit")),
             error_rate=data.get("error_pct"),
             trunc_rate=data.get("trunc_pct"),
         )
