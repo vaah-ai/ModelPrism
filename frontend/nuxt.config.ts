@@ -74,24 +74,70 @@ const ModelPrismPreset = definePreset(Aura, {
       panel: {
         background: '{surface.100}',
         borderColor: '{surface.200}',
-        color: '{surface.800}',
+        color: '{surface.700}',
         padding: '0.25rem 0.25rem',
       },
       item: {
         focusBackground: '{surface.200}',
         color: '{surface.600}',
-        focusColor: '{surface.900}',
+        focusColor: '{surface.800}',
         borderRadius: '0.375rem',
         gap: '0.5rem',
         padding: '0.5rem 0.75rem',
         icon: {
           color: '{surface.500}',
-          focusColor: '{surface.900}',
+          focusColor: '{surface.700}',
         },
       },
       submenuIcon: {
         color: '{surface.500}',
-        focusColor: '{surface.900}',
+        focusColor: '{surface.700}',
+      },
+    },
+    card: {
+      root: {
+        background: '{surface.100}',
+        borderRadius: '{border.radius.md}',
+        color: '{surface.700}',
+        shadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      },
+    },
+    datatable: {
+      root: {
+        borderColor: '{surface.200}',
+      },
+      row: {
+        background: '{surface.100}',
+        hoverBackground: '{surface.200}',
+        color: '{surface.700}',
+      },
+      bodyCell: {
+        borderColor: '{surface.200}',
+      },
+      header: {
+        background: '{surface.50}',
+        borderColor: '{surface.200}',
+        color: '{surface.700}',
+      },
+      headerCell: {
+        background: '{surface.100}',
+        borderColor: '{surface.200}',
+        color: '{surface.600}',
+        hoverBackground: '{surface.200}',
+      },
+    },
+    paginator: {
+      root: {
+        background: '{surface.100}',
+        borderRadius: '{border.radius.md}',
+        color: '{surface.600}',
+      },
+      navButton: {
+        background: 'transparent',
+        hoverBackground: '{surface.200}',
+        color: '{surface.500}',
+        hoverColor: '{surface.700}',
+        borderRadius: '{border.radius.sm}',
       },
     },
   },
