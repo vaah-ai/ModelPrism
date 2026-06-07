@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** High
-> **Status:** ⚪ Not Started (combined)
+> **Status:** 🔵 In Progress (combined)
 > **Parent:** M1-T8 (Nuxt Dashboard Scaffold)
 > **Dependencies:** M1-T8 (Complete)
 
