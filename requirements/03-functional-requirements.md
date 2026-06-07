@@ -31,7 +31,17 @@
 - Agent can be removed from the dashboard (deregister)
 - Backend tracks agent uptime and version
 
-### F1.4 Agent Auto-Discovery (Future)
+### F1.4 Agent Log Streaming
+- Agent pushes log entries to backend via HTTP POST: `POST /api/agents/{agent_id}/logs`
+- Log levels: `debug`, `info`, `warning`, `error`
+- Log entries include: timestamp, level, module, message, optional stack trace
+- Backend stores logs in PostgreSQL (configurable retention per workspace)
+- Backend broadcasts logs to dashboard via WebSocket in real-time
+- Dashboard shows live log viewer per agent with level filtering
+- Logs visible during model deployment to track progress
+- Special focus on `error` and `warning` level logs for debugging
+
+### F1.5 Agent Auto-Discovery (Future)
 - Scan local network for other GPU servers without agents
 - Suggest installing the agent on discovered servers
 
@@ -68,7 +78,10 @@
   - Disk used / total + bar
   - HF cache size
   - GPU temperature and power draw
-- Live log: recent events (deployments, errors, queue changes)
+- Live log viewer: streaming log entries from agent with real-time filtering
+  - Severity filter (debug/info/warning/error)
+  - Search within logs
+  - Auto-scroll with pause capability
 
 ### F2.3 Time Range Selector
 - Live (2s intervals, last 5 minutes)
@@ -115,10 +128,23 @@
     - KV cache budget remaining
   - Step 5: Review and deploy
 - Model download progress bar streamed from agent
+- **Live deployment log viewer** — real-time streaming of agent logs during deployment
+  - Shows download progress, Docker container startup, vLLM initialization
+  - Color-coded by log level (error=red, warning=yellow, info=white, debug=gray)
+- **nvtop GPU monitoring graph** during model loading
+  - Real-time GPU utilization, VRAM usage, temperature
+  - Visible in deployment progress panel alongside log viewer
+  - Helps user see model loading onto GPU in real-time
 - Health check after deployment (confirm /v1/models responds)
 - Model appears in running models list once healthy
 
 ### F3.3 Running Model Management
+- All vLLM instances run in **Docker containers** (mandatory, not optional)
+  - Each model gets its own container
+  - GPU device reservation via `--gpus` flag
+  - Memory limits enforced via Docker
+  - Port mapping via atomic port allocation table
+  - Container health checking via /v1/models endpoint (every 10s)
 - List all deployed models across all GPU servers
 - Per-model details:
   - Current request count (running/waiting)
@@ -223,10 +249,15 @@
 ## F6 — User Management
 
 ### F6.1 Authentication
-- Email/password registration and login
-- OAuth (Google, GitHub) for frictionless onboarding
-- JWT-based sessions with refresh tokens
+- **Email/password** registration and login (simple, no OAuth)
+- Password hashed with bcrypt (cost factor 12)
+- Minimum password length: 8 characters (no complexity rules)
+- JWT-based sessions: access token (15 min expiry), refresh token (7 day expiry)
+- Refresh token rotation (old token invalidated on use)
+- Password reset flow: email with time-limited token (15 min expiry)
+- Account lockout: 5 failed attempts → 1 hour lock
 - Session management (view active sessions, revoke)
+- Auth frontend: custom Pinia composable calling FastAPI JWT endpoints directly (no sidebase/nuxt-auth)
 
 ### F6.2 User Roles
 - **Owner:** Full access, billing, team management, delete platform
@@ -242,31 +273,54 @@
 - Role assignment per user within workspace
 
 ### F6.4 Profile and Settings
-- User profile (name, email, avatar, preferences)
+- User profile (name, email, preferences)
 - Notification settings (email alerts for key events)
 - API tokens for programmatic access to the management API
 - Theme (dark/light mode)
 
+### F6.5 Workspace Settings — Data Retention
+- Configurable per workspace in Settings UI
+- Retention periods for each data tier:
+  - **Raw metrics** (2s resolution): configurable 1h to 48h (default: 24h)
+  - **Aggregated metrics** (1m): configurable 7d to 90d (default: 30d)
+  - **Historical metrics** (5m): configurable 30d to 365d (default: 1y)
+  - **Logs**: configurable 7d to 90d (default: 30d)
+  - **Usage records**: fixed 7 years (tax/compliance)
+- User-friendly slider/dropdown per retention category
+- Warning shown when reducing retention (data will be permanently deleted)
+- Background cleanup job runs daily to enforce retention policies
+
 ## F7 — Billing
 
-### F7.1 Usage-Based Billing (Cloud)
+### F7.1 Server Hourly Pricing Configuration
+- Per-GPU-server hourly pricing configuration (flat rate per server)
+- User sets per-server hourly rate in the agent settings panel
+  - Used for internal cost calculations and "cost comparison" dashboard metrics
+  - Example: user sets "$2.50/hr" for a server with 4xA100 GPUs
+- Cost comparison chart: self-hosted cost (hours × hourly rate) vs cloud API costs
+- Pricing configurable per workspace in Settings UI
+- This is a utility/monitoring feature — NOT connected to Stripe
+
+### F7.2 Usage-Based Billing (Cloud — open-core exclusive)
 - Stripe integration for metered billing
-- Pricing model options:
-  - Per-token (input tokens @ $X/MTok, output tokens @ $Y/MTok)
-  - Per-second GPU compute
-  - Tiered pricing (volume discounts)
-  - Monthly credit packages
+- Pricing model: per-token (input tokens + output tokens counted separately)
+  - Default: $0.10/1M input tokens, $0.40/1M output tokens (configurable)
 - Stripe Meter Events for token usage reporting
+- Metering reported to Stripe every hour in batches
+- On Stripe failure: queue locally, retry with backoff, continue serving inference
 - Automatic invoice generation at end of billing period
 - Payment method management (Stripe customer portal)
 - In-app billing dashboard: current month usage, estimated cost, invoice history
 
-### F7.2 Self-Hosted (No Billing)
-- Billing features are disabled/hidden in self-hosted mode
+### F7.3 Self-Hosted (No Billing)
+- Billing features are disabled/hidden when `MODELPRISM_CLOUD=false`
 - All other features are fully functional
+- Server hourly pricing still visible (used for cost comparison charts)
 - Clear documentation on what features require cloud vs self-hosted
 
-### F7.3 Billing Alerts
+### F7.4 Billing Alerts
 - Usage threshold alerts (email when spend exceeds $X)
+- Monthly spend cap per workspace (email alert at 50%, 80%, 100% of cap)
 - Budget caps (optional hard stop on API proxy usage)
 - Invoice payment failure handling
+- In-app notification bar at 90%+ threshold

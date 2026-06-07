@@ -1,0 +1,237 @@
+{
+  "manifest_version": "1.0",
+  "project": "ModelPrism",
+  "generated_at": "2026-06-07",
+  "methodology": "Specification by Example + Interface Analysis",
+  "tech_stack": {
+    "frontend": {
+      "framework": "Nuxt 4",
+      "ui_library": "PrimeVue 4",
+      "styling": "Tailwind CSS v4",
+      "charts_real_time": "uPlot",
+      "charts_comparison": "ECharts",
+      "state_management": "Pinia",
+      "auth": "Custom composable + FastAPI JWT (no sidebase/nuxt-auth)",
+      "form_validation": "VeeValidate + Zod",
+      "language": "TypeScript"
+    },
+    "backend": {
+      "framework": "FastAPI",
+      "api_format": "JSON:API 1.0 (dashboard REST only)",
+      "orm": "SQLAlchemy 2.0 + Alembic",
+      "database": "PostgreSQL (with partitioned time-series tables)",
+      "cache": "Redis",
+      "validation": "Pydantic v2",
+      "billing": "Stripe (cloud only, behind MODELPRISM_CLOUD flag)",
+      "auth": "bcrypt, python-jose (JWT)",
+      "server": "uvicorn"
+    },
+    "agent": {
+      "language": "Python 3.10+",
+      "runtime": "Python (PyInstaller/Nuitka binary packaging optional)",
+      "model_runner": "vLLM in Docker (mandatory)",
+      "model_download": "huggingface_hub (resumable)",
+      "metrics": "nvidia-smi + psutil + vLLM /metrics",
+      "backend_connection": "WebSocket (outbound, metrics) + HTTP POST (logs)"
+    }
+  },
+  "features": [
+    {"id": "F1", "name": "Backend scaffolding", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": [], "acceptance_criteria_count": 5},
+    {"id": "F2", "name": "Frontend scaffolding", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": [], "acceptance_criteria_count": 5},
+    {"id": "F3", "name": "Database schema", "priority": "Critical", "phase": "Foundation", "effort": "Large", "dependencies": [], "acceptance_criteria_count": 8},
+    {"id": "F4", "name": "JSON:API serialization layer", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": ["F3"], "acceptance_criteria_count": 6},
+    {"id": "F5", "name": "Email/password auth", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": ["F1", "F3"], "acceptance_criteria_count": 7},
+    {"id": "F6", "name": "Agent registration", "priority": "Critical", "phase": "Foundation", "effort": "Small", "dependencies": ["F1", "F3", "F4"], "acceptance_criteria_count": 4},
+    {"id": "F7", "name": "Agent WebSocket handler", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": ["F1", "F6"], "acceptance_criteria_count": 6},
+    {"id": "F8", "name": "Agent metric collection", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": ["F13"], "acceptance_criteria_count": 5},
+    {"id": "F9", "name": "Agent metric push", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": ["F7", "F8"], "acceptance_criteria_count": 4},
+    {"id": "F10", "name": "Backend metric ingestion + downsampling", "priority": "Critical", "phase": "Foundation", "effort": "Large", "dependencies": ["F1", "F3", "F7", "F9"], "acceptance_criteria_count": 6},
+    {"id": "F11", "name": "Agent command handler", "priority": "Critical", "phase": "Foundation", "effort": "Medium", "dependencies": ["F7"], "acceptance_criteria_count": 5},
+    {"id": "F12", "name": "Agent log streaming", "priority": "High", "phase": "Foundation", "effort": "Small", "dependencies": ["F1", "F3", "F7"], "acceptance_criteria_count": 4},
+    {"id": "F13", "name": "Agent lifecycle", "priority": "Critical", "phase": "Foundation", "effort": "Small", "dependencies": ["F6", "F7", "F11"], "acceptance_criteria_count": 4},
+    {"id": "F14", "name": "GPU server overview page", "priority": "Critical", "phase": "MVP", "effort": "Large", "dependencies": ["F2", "F5", "F7", "F10"], "acceptance_criteria_count": 6},
+    {"id": "F15", "name": "Single server dashboard", "priority": "Critical", "phase": "MVP", "effort": "XL", "dependencies": ["F2", "F5", "F7", "F9", "F12"], "acceptance_criteria_count": 10},
+    {"id": "F16", "name": "WebSocket broadcast (backend to browser)", "priority": "Critical", "phase": "MVP", "effort": "Medium", "dependencies": ["F7", "F9", "F12"], "acceptance_criteria_count": 5},
+    {"id": "F17", "name": "Time range selector + historical query", "priority": "Critical", "phase": "MVP", "effort": "Medium", "dependencies": ["F10"], "acceptance_criteria_count": 5},
+    {"id": "F18", "name": "HF Hub browser", "priority": "High", "phase": "Enhancement", "effort": "Medium", "dependencies": ["F1", "F4"], "acceptance_criteria_count": 5},
+    {"id": "F19", "name": "Model deployment wizard", "priority": "High", "phase": "Enhancement", "effort": "XL", "dependencies": ["F2", "F5", "F18"], "acceptance_criteria_count": 8},
+    {"id": "F20", "name": "Docker-based model deployment", "priority": "High", "phase": "Enhancement", "effort": "Large", "dependencies": ["F11", "F13"], "acceptance_criteria_count": 7},
+    {"id": "F21", "name": "Model download (resumable)", "priority": "High", "phase": "Enhancement", "effort": "Medium", "dependencies": ["F11"], "acceptance_criteria_count": 4},
+    {"id": "F22", "name": "Running model management", "priority": "High", "phase": "Enhancement", "effort": "Large", "dependencies": ["F11", "F20"], "acceptance_criteria_count": 6},
+    {"id": "F23", "name": "Model optimization recommendations", "priority": "Medium", "phase": "Enhancement", "effort": "Medium", "dependencies": ["F10", "F22"], "acceptance_criteria_count": 4},
+    {"id": "F24", "name": "Benchmark runner", "priority": "Medium", "phase": "Enhancement", "effort": "Large", "dependencies": ["F11", "F22"], "acceptance_criteria_count": 5},
+    {"id": "F25", "name": "Benchmark storage + history", "priority": "Medium", "phase": "Enhancement", "effort": "Medium", "dependencies": ["F3", "F10"], "acceptance_criteria_count": 4},
+    {"id": "F26", "name": "Benchmark comparison", "priority": "Medium", "phase": "Enhancement", "effort": "Large", "dependencies": ["F2", "F25"], "acceptance_criteria_count": 4},
+    {"id": "F27", "name": "API key management", "priority": "High", "phase": "Scale", "effort": "Medium", "dependencies": ["F1", "F3"], "acceptance_criteria_count": 5},
+    {"id": "F28", "name": "OpenAI-compatible proxy", "priority": "High", "phase": "Scale", "effort": "XL", "dependencies": ["F1", "F22", "F27"], "acceptance_criteria_count": 8},
+    {"id": "F29", "name": "Token counting + usage tracking", "priority": "High", "phase": "Scale", "effort": "Large", "dependencies": ["F27", "F28"], "acceptance_criteria_count": 5},
+    {"id": "F30", "name": "Rate limiting", "priority": "High", "phase": "Scale", "effort": "Medium", "dependencies": ["F27", "F28"], "acceptance_criteria_count": 4},
+    {"id": "F31", "name": "Request routing", "priority": "High", "phase": "Scale", "effort": "Medium", "dependencies": ["F22", "F28"], "acceptance_criteria_count": 5},
+    {"id": "F32", "name": "Workspace management", "priority": "High", "phase": "Scale", "effort": "Medium", "dependencies": ["F3", "F5"], "acceptance_criteria_count": 5},
+    {"id": "F33", "name": "Role-based access control", "priority": "High", "phase": "Scale", "effort": "Large", "dependencies": ["F5", "F32"], "acceptance_criteria_count": 6},
+    {"id": "F34", "name": "Workspace-scoped data isolation", "priority": "High", "phase": "Scale", "effort": "Medium", "dependencies": ["F3", "F32"], "acceptance_criteria_count": 4},
+    {"id": "F35", "name": "Data retention configuration", "priority": "Medium", "phase": "Scale", "effort": "Medium", "dependencies": ["F10", "F12", "F32"], "acceptance_criteria_count": 5},
+    {"id": "F36", "name": "Server hourly pricing config", "priority": "Medium", "phase": "Growth", "effort": "Small", "dependencies": ["F14", "F15"], "acceptance_criteria_count": 3},
+    {"id": "F37", "name": "Stripe integration (cloud only)", "priority": "Low", "phase": "Growth", "effort": "Large", "dependencies": ["F29", "F30"], "acceptance_criteria_count": 6},
+    {"id": "F38", "name": "Billing dashboard", "priority": "Low", "phase": "Growth", "effort": "Medium", "dependencies": ["F2", "F37"], "acceptance_criteria_count": 5},
+    {"id": "F39", "name": "Billing alerts", "priority": "Low", "phase": "Growth", "effort": "Medium", "dependencies": ["F37", "F38"], "acceptance_criteria_count": 4},
+    {"id": "F40", "name": "Admin panel", "priority": "Low", "phase": "Growth", "effort": "Medium", "dependencies": ["F1", "F2", "F5", "F7", "F10", "F22", "F27", "F32"], "acceptance_criteria_count": 4}
+  ],
+  "quality_attributes": {
+    "performance": {
+      "elicited": true,
+      "targets": {
+        "metric_refresh_interval": "2s",
+        "ws_latency_p99": "<500ms",
+        "agent_cpu_overhead": "<1% core",
+        "dashboard_page_load": "<2s",
+        "chart_render_live": "<50ms (150 pts)",
+        "chart_render_historical": "<200ms (10K pts)",
+        "backend_scale_agents": "100+",
+        "backend_scale_ws": "10000+"
+      }
+    },
+    "reliability": {
+      "elicited": true,
+      "targets": {
+        "agent_reconnect": "exponential backoff (1s-60s)",
+        "agent_metric_buffer": "60s replay on reconnect",
+        "agent_supervision": "systemd or Docker restart policy",
+        "backend_degradation": "graceful without PostgreSQL, fail-open Redis rate limit"
+      }
+    },
+    "security": {
+      "elicited": true,
+      "targets": {
+        "api_key_storage": "SHA-256 hashed",
+        "agent_token_lifetime": "24h, single-use",
+        "password_hashing": "bcrypt cost 12",
+        "jwt_expiry": "15m access, 7d refresh",
+        "tls": "all traffic, WSS",
+        "auth_approach": "email/password only, no OAuth"
+      }
+    },
+    "maintainability": {
+      "elicited": true,
+      "targets": {
+        "backend_test_coverage": ">80%",
+        "frontend_language": "TypeScript",
+        "shared_package": "Pydantic schemas only",
+        "documentation": "README, ARCHITECTURE, OpenAPI, CONTRIBUTING"
+      }
+    },
+    "portability": {
+      "elicited": true,
+      "targets": {
+        "gpu_server_os": "Ubuntu 22.04+, Debian 12+, RHEL 9+",
+        "nvidia": "CUDA 12.0+, Docker with NVIDIA Container Toolkit",
+        "backend_os": "Linux (production), macOS (dev)",
+        "python": "3.10+ (agent), 3.11+ (backend)",
+        "postgresql": "15+",
+        "redis": "7+"
+      }
+    }
+  },
+  "files": [
+    "README.md",
+    "01-product-vision.md",
+    "02-architecture-overview.md",
+    "03-functional-requirements.md",
+    "04-non-functional-requirements.md",
+    "05-tech-stack.md",
+    "06-api-surface.md",
+    "07-directory-structure.md",
+    "feature-dependency-map.md",
+    "roadmap.md",
+    "glossary.md",
+    "deployment/deployment.md",
+    "testing/testing-strategy.md",
+    "security/security.md",
+    "api/api-design.md",
+    "data-models/data-models.md",
+    "integrations/integrations.md",
+    "analytics/analytics.md",
+    "adr/README.md",
+    "adr/ADR-001-jsonapi-scope.md",
+    "adr/ADR-002-docker-vllm.md",
+    "adr/ADR-003-auth-approach.md",
+    "adr/ADR-004-monetization.md",
+    "adr/ADR-005-data-retention.md",
+    "features/feature-f1-backend-scaffolding.md",
+    "features/feature-f2-frontend-scaffolding.md",
+    "features/feature-f3-database-schema.md",
+    "features/feature-f4-jsonapi-serialization-layer.md",
+    "features/feature-f5-email-password-auth.md",
+    "features/feature-f6-agent-registration.md",
+    "features/feature-f7-agent-websocket-handler.md",
+    "features/feature-f8-agent-metric-collection.md",
+    "features/feature-f9-agent-metric-push.md",
+    "features/feature-f10-backend-metric-ingestion.md",
+    "features/feature-f11-agent-command-handler.md",
+    "features/feature-f12-agent-log-streaming.md",
+    "features/feature-f13-agent-lifecycle.md",
+    "features/feature-f14-gpu-server-overview-page.md",
+    "features/feature-f15-single-server-dashboard.md",
+    "features/feature-f16-websocket-broadcast.md",
+    "features/feature-f17-time-range-selector.md",
+    "features/feature-f18-hf-hub-browser.md",
+    "features/feature-f19-model-deployment-wizard.md",
+    "features/feature-f20-docker-model-deployment.md",
+    "features/feature-f21-model-download-resumable.md",
+    "features/feature-f22-running-model-management.md",
+    "features/feature-f23-model-optimization-recommendations.md",
+    "features/feature-f24-benchmark-runner.md",
+    "features/feature-f25-benchmark-storage-history.md",
+    "features/feature-f26-benchmark-comparison.md",
+    "features/feature-f27-api-key-management.md",
+    "features/feature-f28-openai-proxy.md",
+    "features/feature-f29-token-counting-usage.md",
+    "features/feature-f30-rate-limiting.md",
+    "features/feature-f31-request-routing.md",
+    "features/feature-f32-workspace-management.md",
+    "features/feature-f33-role-based-access.md",
+    "features/feature-f34-workspace-data-isolation.md",
+    "features/feature-f35-data-retention-config.md",
+    "features/feature-f36-server-hourly-pricing.md",
+    "features/feature-f37-stripe-integration.md",
+    "features/feature-f38-billing-dashboard.md",
+    "features/feature-f39-billing-alerts.md",
+    "features/feature-f40-admin-panel.md"
+  ],
+  "traceability": {
+    "requirements_to_features": [
+      {"requirement": "F1 Agent Management", "features": ["F6", "F7", "F8", "F9", "F11", "F12", "F13"]},
+      {"requirement": "F2 Real-Time Dashboard", "features": ["F14", "F15", "F16", "F17"]},
+      {"requirement": "F3 Model Management", "features": ["F18", "F19", "F20", "F21", "F22", "F23"]},
+      {"requirement": "F4 Benchmarking", "features": ["F24", "F25", "F26"]},
+      {"requirement": "F5 API Proxy", "features": ["F27", "F28", "F29", "F30", "F31"]},
+      {"requirement": "F6 User Management", "features": ["F5", "F32", "F33", "F34", "F35"]},
+      {"requirement": "F7 Billing", "features": ["F36", "F37", "F38", "F39"]}
+    ],
+    "features_to_acceptance_criteria": "Each feature has acceptance criteria count listed in feature table above"
+  },
+  "pipeline_handoff": {
+    "next_prompt": "2-plan-generator-optional.md",
+    "manifest_format_version": "1.0",
+    "outputs": {
+      "requirements_dir": "/Users/pk/Projects/ModelPrism/requirements/",
+      "docs": [
+        "README.md",
+        "01-product-vision.md",
+        "02-architecture-overview.md",
+        "03-functional-requirements.md",
+        "04-non-functional-requirements.md",
+        "05-tech-stack.md",
+        "06-api-surface.md",
+        "07-directory-structure.md",
+        "feature-dependency-map.md",
+        "adr/README.md",
+        "adr/ADR-001-jsonapi-scope.md",
+        "adr/ADR-002-docker-vllm.md",
+        "adr/ADR-003-auth-approach.md",
+        "adr/ADR-004-monetization.md",
+        "adr/ADR-005-data-retention.md"
+      ]
+    }
+  }
+}

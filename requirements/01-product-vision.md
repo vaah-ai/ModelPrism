@@ -28,7 +28,11 @@ Each team reinvents the same glue code. ModelPrism replaces this with a single o
 
 ### Open Source Commitment
 
-ModelPrism is fully open source. Users can self-host the entire stack (frontend + backend + agents) on their own infrastructure. A hosted cloud version may be offered for users who want a managed experience.
+ModelPrism follows an **open core** model:
+- **Core platform** (agent, dashboard, model management, benchmarking, monitoring) — fully open source (Apache 2.0)
+- **Cloud features** (multi-tenant API proxy, usage analytics, billing) — available in the hosted SaaS version
+- Users can self-host the entire core stack (frontend + backend + agents) on their own infrastructure
+- A hosted cloud version is available for users who want a managed experience with full feature access
 
 ### Target Audience
 

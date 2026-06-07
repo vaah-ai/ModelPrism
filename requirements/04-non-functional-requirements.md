@@ -12,6 +12,8 @@
 - Chart rendering: < 50ms for 150 data points (live view)
 - Chart rendering: < 200ms for 10,000 data points (historical view)
 - Time range switching: < 1 second to fetch and render
+- Live dashboard: client accumulates incoming WebSocket metrics for 500ms, then batch-renders in a single cycle
+- uPlot used for high-frequency real-time charts; ECharts for comparison/billing views
 
 ### NFR1.3 Agent Overhead
 - Agent CPU usage on GPU server: < 1% of a single core
@@ -45,6 +47,8 @@
 - Raw metrics retained for short window (5 minutes in memory), sampled for longer retention
 - No data loss on agent crash (buffered metrics may lose last 2 seconds)
 - Database backups supported via standard PostgreSQL tooling
+- Data retention policies enforced by background cleanup job (daily)
+- Retention periods configurable per workspace in dashboard Settings UI
 
 ## NFR3 — Security
 

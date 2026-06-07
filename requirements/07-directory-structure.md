@@ -31,7 +31,7 @@ modelprism/
 │   │   │       ├── usage/
 │   │   │       │   └── index.vue   # Usage tracking + billing
 │   │   │       ├── settings/
-│   │   │       │   ├── index.vue   # Workspace settings
+│   │   │       │   ├── index.vue   # Workspace settings (data retention, etc.)
 │   │   │       │   ├── members.vue # Team management
 │   │   │       │   └── billing.vue # Billing settings
 │   │   │       └── admin/
@@ -43,6 +43,9 @@ modelprism/
 │   │   │   │   ├── QueueDiagnostics.vue
 │   │   │   │   ├── ModelList.vue
 │   │   │   │   └── LiveLog.vue
+│   │   │   ├── deployment/
+│   │   │   │   ├── DeploymentLogViewer.vue    # Live log stream during deploy
+│   │   │   │   └── GpuLoadingGraph.vue        # nvtop-style GPU monitoring
 │   │   │   ├── models/
 │   │   │   │   ├── DeployWizard.vue
 │   │   │   │   ├── CapacityCalculator.vue
@@ -61,6 +64,7 @@ modelprism/
 │   │   │       ├── StatusBadge.vue
 │   │   │       └── TimeRangeSelector.vue
 │   │   └── composables/
+│   │       ├── useAuth.ts           # Custom auth composable (Pinia + FastAPI JWT)
 │   │       ├── useWebSocketMetrics.ts
 │   │       ├── useAgents.ts
 │   │       └── useModels.ts
@@ -69,10 +73,11 @@ modelprism/
 │   │       └── auth/
 │   │           └── session.get.ts
 │   ├── stores/
+│   │   ├── auth.ts                 # Auth state (JWT, user, session)
 │   │   ├── metrics.ts              # Pinia store for live metrics
 │   │   ├── agents.ts               # Agent list store
 │   │   ├── models.ts               # Deployed models store
-│   │   └── user.ts                 # Auth/user store
+│   │   └── user.ts                 # User/workspace store
 │   ├── nuxt.config.ts
 │   ├── package.json
 │   └── tsconfig.json
@@ -92,6 +97,8 @@ modelprism/
 │   │   │   ├── benchmark.py
 │   │   │   └── billing.py
 │   │   ├── schemas/                # Pydantic request/response schemas
+│   │   │   ├── jsonapi.py          # JSON:API base serializers (ResourceObject, Document, Pagination, Errors)
+│   │   │   ├── filters.py          # JSON:API filter/sort parser
 │   │   │   ├── agent.py
 │   │   │   ├── model.py
 │   │   │   ├── benchmark.py
@@ -101,6 +108,7 @@ modelprism/
 │   │   ├── api/                    # Route handlers
 │   │   │   ├── auth.py
 │   │   │   ├── agents.py
+│   │   │   ├── agent_logs.py       # Log ingestion + retrieval
 │   │   │   ├── metrics.py
 │   │   │   ├── models.py
 │   │   │   ├── benchmarks.py
@@ -108,19 +116,21 @@ modelprism/
 │   │   │   ├── usage.py
 │   │   │   ├── billing.py
 │   │   │   ├── users.py
-│   │   │   └── proxy.py            # OpenAI/Anthropic proxy
+│   │   │   └── proxy.py            # OpenAI proxy
 │   │   ├── services/               # Business logic
 │   │   │   ├── agent_manager.py
 │   │   │   ├── model_manager.py
 │   │   │   ├── benchmark_runner.py
 │   │   │   ├── usage_tracker.py
 │   │   │   ├── billing_service.py
-│   │   │   └── proxy_service.py
+│   │   │   ├── proxy_service.py
+│   │   │   ├── log_service.py      # Log storage + retention
+│   │   │   └── retention_service.py # Data retention policy enforcement
 │   │   ├── ws/                     # WebSocket handlers
 │   │   │   ├── agent_ws.py         # Agent connection handler
 │   │   │   └── dashboard_ws.py     # Dashboard broadcast handler
 │   │   ├── middleware/
-│   │   │   ├── auth.py             # JWT/auth middleware
+│   │   │   ├── auth.py             # JWT auth middleware
 │   │   │   └── rate_limit.py       # Redis rate limiting
 │   │   └── utils/
 │   │       ├── crypto.py           # Hashing, token generation
@@ -131,7 +141,7 @@ modelprism/
 │   ├── Dockerfile
 │   └── pyproject.toml
 │
-├── agent/                          # modelprism-agent (runs on GPU servers)
+├── modelprism-agent/               # modelprism-agent (runs on GPU servers)
 │   ├── modelprism_agent/
 │   │   ├── __init__.py
 │   │   ├── main.py                 # Entry point
@@ -143,13 +153,15 @@ modelprism/
 │   │   │   ├── system.py           # CPU, RAM, disk (psutil)
 │   │   │   └── vllm.py             # vLLM Prometheus metrics parser
 │   │   ├── manager/
-│   │   │   ├── vllm_manager.py     # Spawn/kill vLLM processes
-│   │   │   └── model_downloader.py # HF Hub model download with progress
+│   │   │   ├── docker_manager.py   # Docker container management (default)
+│   │   │   ├── vllm_manager.py     # vLLM config generation
+│   │   │   └── model_downloader.py # HF Hub model download with resume
 │   │   ├── benchmark/
 │   │   │   ├── runner.py           # Run benchmarks against local vLLM
 │   │   │   └── scenarios.py        # Predefined benchmark scenarios
 │   │   ├── connection.py           # WebSocket client to backend
 │   │   ├── command_handler.py      # Process commands from backend
+│   │   ├── log_streamer.py         # Push logs to backend via HTTP POST
 │   │   └── utils/
 │   │       ├── prometheus_parser.py
 │   │       └── hf_utils.py
@@ -161,16 +173,17 @@ modelprism/
 ├── common/                         # Shared code between backend + agent
 │   ├── pyproject.toml
 │   └── modelprism_common/
-│       ├── schemas/                # Shared Pydantic models
+│       ├── schemas/                # Shared Pydantic models (flat file approach)
 │       │   ├── metrics.py
 │       │   ├── commands.py
 │       │   └── events.py
 │       └── __init__.py
 │
 ├── deploy/
-│   ├── docker-compose.yml          # Full self-hosted stack
+│   ├── docker-compose.yml          # Full self-hosted stack (postgres, redis, backend, frontend)
 │   ├── nginx/
 │   │   └── modelprism.conf
+│   ├── .env.example                # Environment template
 │   └── install.sh                  # Quick self-hosted install script
 │
 ├── docs/

@@ -11,8 +11,9 @@
 | **ECharts** | Benchmark/billing charts | Candlestick, radar, heatmap, comparison views |
 | **Pinia** | State management | Vue 3 native, WebSocket-connected stores for real-time data |
 | **VueUse** | Composable utilities | `useWebSocket`, `useIntervalFn`, `useStorage`, `useRefHistory` |
-| **sidebase/nuxt-auth** | Authentication | RBAC, session management, OAuth support, Nuxt-native |
+| **Nuxt Auth** | Authentication | Custom Pinia composable calling FastAPI JWT directly (no sidebase/nuxt-auth) |
 | **VeeValidate + Zod** | Form validation | Type-safe model deployment form wizard validation |
+| **JSON:API** | API format | `application/vnd.api+json` for all dashboard REST endpoints |
 | **TypeScript** | Type safety | Full type coverage across frontend |
 
 ## Backend
