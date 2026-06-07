@@ -64,3 +64,8 @@ asyncio_mode = "auto"
 markers = [
     "integration: marks tests that require real PostgreSQL and Redis (docker-compose)",
 ]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+]
