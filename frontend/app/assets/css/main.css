@@ -1,1 +1,158 @@
 @import "tailwindcss";
+
+/* ============================================
+   ModelPrism Design Tokens
+   Bold & Tech-forward — Dark-first, Cyan accent
+   ============================================ */
+
+:root {
+  /* Light theme (default) */
+  --bg-page: #fafafa;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f3f4f6;
+  --bg-sidebar: #ffffff;
+  --border-color: #e5e7eb;
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  --accent: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-light: #ecfeff;
+  --accent-subtle: rgba(6, 182, 212, 0.08);
+
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+
+  --sidebar-width: 16rem;
+  --topbar-height: 4rem;
+}
+
+/* Dark theme via prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #030712;
+    --bg-surface: #111827;
+    --bg-elevated: #1f2937;
+    --bg-sidebar: #111827;
+    --border-color: #1f2937;
+
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+
+    --accent: #06b6d4;
+    --accent-hover: #22d3ee;
+    --accent-light: rgba(6, 182, 212, 0.12);
+    --accent-subtle: rgba(6, 182, 212, 0.06);
+
+    --danger: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Card base — consistent surface styling */
+.card-base {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* Header bar base */
+.header-base {
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Sidebar base */
+.sidebar-base {
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+}
+
+/* Hover lift effect for cards */
+.hover-lift {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Accent text */
+.text-accent {
+  color: var(--accent);
+}
+
+/* Accent background */
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.bg-accent-hover:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Accent border */
+.border-accent {
+  border-color: var(--accent);
+}
+
+/* Accent subtle background (for hover highlights) */
+.bg-accent-subtle {
+  background-color: var(--accent-subtle);
+}
+
+/* Severity colors */
+.text-severity-success {
+  color: var(--success);
+}
+
+.text-severity-warning {
+  color: var(--warning);
+}
+
+.text-severity-danger {
+  color: var(--danger);
+}
+
+/* Smooth theme transitions */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
