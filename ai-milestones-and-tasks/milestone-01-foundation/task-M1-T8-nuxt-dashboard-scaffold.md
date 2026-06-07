@@ -159,3 +159,47 @@ Within each phase, files can be created in any order.
 - Tailwind CSS v4 uses `@import "tailwindcss"` not `@tailwind` directives
 - For MVP's no-auth mode, the dashboard makes direct HTTP calls to FastAPI without JWT headers
 - The existing `vllm-dashboard.html` can be kept as reference for chart layouts and metric displays
+
+## Pending Improvements (Post-Merge Polish)
+
+The following improvements are documented for subsequent iterations after the initial scaffold merge. These are tracked here to avoid scope creep in the initial scaffolding task.
+
+### P1 — UI/UX Polish with Design Skills
+- **Goal:** Refine visual design, spacing, typography, and component styling
+- **Action:** Invoke `ui-ux-pro-max` and `frontend-design` skills to audit and improve the UI
+- **Scope:** Dashboard layout, sidebar, top bar, summary cards, DataTable, server detail page, empty states
+- **Rationale:** Scaffold focused on structure and functionality; design refinement is a separate pass
+
+### P2 — Light & Dark Mode
+- **Goal:** Enable seamless light/dark mode toggle
+- **Action:** Implement a theme toggle in the top bar that switches between PrimeVue's `darkModeSelector` configurations
+- **Current state:** `nuxt.config.ts` has `darkModeSelector: 'system'` but no explicit toggle UI
+- **Scope:**
+  - Add theme toggle button (sun/moon icon) in top bar
+  - Store preference in localStorage via `useStorage`
+  - Respect system preference on first visit
+  - Ensure all component styles render correctly in both modes
+- **Rationale:** System-only dark mode works but users should be able to override it manually
+
+### P3 — Fix PrimeVue Icons
+- **Issue:** PrimeVue icons (`pi-*` classes) are used throughout sidebar, buttons, and data displays but may not be visible
+- **Root cause:** PrimeVue icons require importing the icon CSS (`primeicons.css`) which may not be configured in the auto-import setup
+- **Action:** Add PrimeVue icon stylesheet to the project configuration
+- **Scope:**
+  - Verify `primeicons` package is installed
+  - Import `primeicons` CSS in `main.css` or `nuxt.config.ts` css array
+  - Verify all icon references render correctly: sidebar nav icons, action buttons, status indicators, empty states
+- **Rationale:** Icons are essential for navigation clarity and visual hierarchy
+
+### P4 — Responsive Verification Across Devices
+- **Goal:** Verify and fix layout on mobile (375px), tablet (768px), and desktop (1280px+)
+- **Action:** Test with Playwright or browser DevTools emulation after fixes are applied
+- **Current state:** Sidebar has responsive overlay for <1024px via Tailwind `lg:` breakpoint, but full verification hasn't been performed
+- **Scope:**
+  - Test index → dashboard redirect flow on mobile
+  - Verify sidebar toggle (hamburger) works on mobile/tablet
+  - Check DataTable horizontal overflow on narrow screens
+  - Verify summary cards stack correctly in 1-column grid on mobile
+  - Test server detail page layout on tablet/mobile
+  - Fix any layout breakage, overflow, or tap-target sizing issues
+- **Rationale:** Dashboard operators may access from tablets or phones for quick status checks

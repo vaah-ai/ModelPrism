@@ -39,3 +39,12 @@
 - **Milestone M1 folder:** `/Users/pk/Projects/ModelPrism/ai-milestones-and-tasks/milestone-01-foundation/`
 - **M1 tasks:** 9 tasks total, estimated ~3-4 weeks effort
 - **Architecture decision:** Dashboard consumes FastAPI directly (`nitro: false` in Nuxt config)
+
+### M1-T8 Sub-Tasks (Pending Improvements)
+
+| ID | Title | Status | Priority | Dependencies |
+|----|-------|--------|----------|--------------|
+| M1-T8-P1 | UI/UX Polish (ui-ux-pro-max + frontend-design) | ⚪ Not Started | Medium | M1-T8 |
+| M1-T8-P2 | Light & Dark Mode Toggle | ⚪ Not Started | Medium | M1-T8-P1 |
+| M1-T8-P3 | Fix PrimeVue Icons (pi-* not visible) | ⚪ Not Started | High | M1-T8 |
+| M1-T8-P4 | Responsive Verification (mobile/tablet/desktop) | ⚪ Not Started | Medium | M1-T8-P3 |
