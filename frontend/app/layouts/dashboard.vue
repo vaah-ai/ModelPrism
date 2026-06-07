@@ -4,28 +4,33 @@
     <Transition name="sidebar">
       <div
         v-if="sidebarOpen"
-        class="fixed inset-0 z-[60] bg-black/50 lg:hidden"
+        class="fixed inset-0 z-[60] bg-black/60 lg:hidden"
         @click="sidebarOpen = false"
       />
     </Transition>
 
     <!-- Sidebar -->
     <aside
-      class="sidebar-base fixed inset-y-0 left-0 z-50 flex w-64 flex-col shadow-lg transition-transform duration-300 lg:static lg:translate-x-0"
+      class="sidebar-base fixed inset-y-0 left-0 z-50 flex w-64 flex-col transition-transform duration-300 lg:static lg:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <!-- Brand -->
       <div
-        class="flex h-16 items-center justify-between border-b px-6"
+        class="flex h-16 items-center justify-between border-b px-5"
         style="border-color: var(--border-color)"
       >
-        <NuxtLink to="/dashboard" class="flex items-center gap-2">
-          <span class="text-xl font-bold" style="color: var(--accent)"
+        <NuxtLink to="/dashboard" class="flex items-center gap-2.5">
+          <!-- Logo mark -->
+          <span
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
+            style="background-color: var(--accent); color: #fff"
+          >MP</span>
+          <span class="text-base font-bold tracking-tight" style="color: var(--text-primary)"
             >ModelPrism</span
           >
         </NuxtLink>
         <button
-          class="flex h-11 w-11 items-center justify-center rounded-lg lg:hidden"
+          class="flex h-11 w-11 items-center justify-center rounded-lg lg:hidden row-hover"
           style="color: var(--text-muted)"
           @click="sidebarOpen = false"
         >
@@ -34,16 +39,23 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto p-3">
-        <PanelMenu :model="navItems" class="border-none" />
+      <nav class="flex-1 overflow-y-auto px-2 py-4">
+        <PanelMenu
+          :model="navItems"
+          class="border-none"
+          :pt="panelMenuPt"
+        />
       </nav>
 
-      <!-- Footer -->
+      <!-- Bottom section -->
       <div
-        class="border-t p-4 text-center text-xs"
-        style="border-color: var(--border-color); color: var(--text-muted)"
+        class="flex flex-col border-t px-4 py-4"
+        style="border-color: var(--border-color)"
       >
-        ModelPrism v{{ appConfig.version }}
+        <!-- Version -->
+        <span class="mb-2 text-center text-xs" style="color: var(--text-muted)">
+          v{{ appConfig.version }}
+        </span>
       </div>
     </aside>
 
@@ -55,7 +67,7 @@
       >
         <div class="flex items-center gap-3">
           <button
-            class="flex h-11 w-11 items-center justify-center rounded-lg"
+            class="flex h-11 w-11 items-center justify-center rounded-lg row-hover"
             style="color: var(--text-secondary)"
             @click="sidebarOpen = !sidebarOpen"
           >
@@ -76,7 +88,7 @@
               root: { class: 'h-11 w-11' },
             }"
             :aria-label="themeLabel"
-            :v-tooltip="themeLabel"
+            v-tooltip="themeLabel"
             @click="cycleTheme"
           />
           <Tag value="MVP" severity="info" />
@@ -93,7 +105,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-
 const appConfig = useAppConfig();
 const route = useRoute();
 const sidebarOpen = ref(false);
@@ -184,6 +195,76 @@ const navItems = ref<NavItem[]>([
     to: "/dashboard/admin",
   },
 ]);
+
+/**
+ * PanelMenu pass-through options for a polished, dark-first sidebar.
+ * Uses CSS custom properties for seamless light/dark switching.
+ */
+const panelMenuPt = {
+  root: {
+    class: "border-none bg-transparent",
+  },
+  panel: {
+    class: "border-none mb-0.5 bg-transparent",
+  },
+  submenu: {
+    class: "border-none bg-transparent",
+  },
+  header: {
+    class: "border-none rounded-lg overflow-hidden",
+  },
+  headerLink: ({ context }: { context: { active: boolean } }) => ({
+    class: [
+      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150",
+      "no-underline cursor-pointer select-none",
+      context.active
+        ? "text-accent bg-active font-semibold"
+        : "text-secondary",
+    ],
+    style: {
+      color: context.active ? "var(--text-accent)" : "var(--text-secondary)",
+      backgroundColor: context.active ? "var(--bg-active)" : "transparent",
+    },
+    onMouseenter: function (this: HTMLElement) {
+      if (!this.classList.contains("bg-active")) {
+        this.style.backgroundColor = "var(--bg-hover)";
+        this.style.color = "var(--text-primary)";
+      }
+    },
+    onMouseleave: function (this: HTMLElement) {
+      if (!this.classList.contains("bg-active")) {
+        this.style.backgroundColor = "transparent";
+        this.style.color = "var(--text-secondary)";
+      }
+    },
+  }),
+  headerIcon: {
+    class: "text-base w-5 text-center shrink-0",
+  },
+  headerLabel: {
+    class: "text-sm font-medium",
+  },
+  submenuIcon: {
+    class: "ml-auto text-xs transition-transform duration-150",
+  },
+  rootList: {
+    class: "list-none p-0 m-0",
+  },
+  separator: {
+    class: "my-1",
+    style: {
+      borderTop: "1px solid var(--border-color)",
+    },
+  },
+  transition: {
+    enterFromClass: "max-h-0 overflow-hidden opacity-0",
+    enterActiveClass: "overflow-hidden transition-all duration-200 ease-out",
+    enterToClass: "max-h-96 opacity-100",
+    leaveFromClass: "max-h-96 opacity-100",
+    leaveActiveClass: "overflow-hidden transition-all duration-150 ease-in",
+    leaveToClass: "max-h-0 overflow-hidden opacity-0",
+  },
+};
 </script>
 
 <style scoped>
@@ -195,4 +276,5 @@ const navItems = ref<NavItem[]>([
 .sidebar-leave-to {
   opacity: 0;
 }
+
 </style>
