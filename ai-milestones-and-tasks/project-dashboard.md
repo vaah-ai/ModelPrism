@@ -45,6 +45,6 @@
 | ID | Title | Status | Priority | Dependencies |
 |----|-------|--------|----------|--------------|
 | M1-T8-P1 | UI/UX Polish (ui-ux-pro-max + frontend-design) | 🟢 Complete | Medium | M1-T8 |
-| M1-T8-P2 | Light & Dark Mode Toggle | 🔵 In Progress | Medium | M1-T8-P1 |
+| M1-T8-P2 | Light & Dark Mode Toggle | 🟢 Complete | Medium | M1-T8-P1 |
 | M1-T8-P3 | Fix PrimeVue Icons (pi-* not visible) | ⚪ Not Started | High | M1-T8 |
 | M1-T8-P4 | Responsive Verification (mobile/tablet/desktop) | ⚪ Not Started | Medium | M1-T8-P3 |

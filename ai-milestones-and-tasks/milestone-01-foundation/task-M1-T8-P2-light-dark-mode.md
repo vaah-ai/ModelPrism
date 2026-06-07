@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** Medium
-> **Status:** 🔵 In Progress
+> **Status:** 🟢 Complete
 > **Parent:** M1-T8 (Nuxt Dashboard Scaffold)
 > **Dependencies:** M1-T8-P1 (UI/UX Polish)
 

@@ -87,7 +87,7 @@ export default defineNuxtConfig({
         preset: ModelPrismPreset,
         options: {
           prefix: 'p',
-          darkModeSelector: 'system',
+          darkModeSelector: '.p-dark',
           cssLayer: false,
         },
       },
