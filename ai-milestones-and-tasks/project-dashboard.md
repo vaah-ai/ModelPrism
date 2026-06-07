@@ -33,7 +33,7 @@
 - **Architecture:** Agent → WebSocket/REST → FastAPI Backend → Nuxt Dashboard
 - **MVP Goal:** A simple agent installed on a GPU server, a simple FastAPI backend to register GPU servers and store server metrics, a simple Nuxt dashboard consuming the FastAPI directly (no Nitro API).
 - **Requirements:** `/Users/pk/Projects/ModelPrism/requirements/`
-- **Dashboard app:** `/Users/pk/Projects/ai-models-hosting/dashboard-gpu-server/`
+- **Dashboard app:** `/Users/pk/Projects/ModelPrism/frontend/`
 - **Agent submodule:** `/Users/pk/Projects/ModelPrism/modelprism-agent/`
 - **Planner prompt:** `/Users/pk/Projects/ModelPrism/ai-prompts/prompt-ai-milestones-tasks-planner.md`
 - **Milestone M1 folder:** `/Users/pk/Projects/ModelPrism/ai-milestones-and-tasks/milestone-01-foundation/`

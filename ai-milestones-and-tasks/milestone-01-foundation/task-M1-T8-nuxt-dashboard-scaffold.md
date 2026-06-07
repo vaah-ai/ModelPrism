@@ -7,11 +7,11 @@
 
 ## Description
 
-Scaffold the Nuxt 4 dashboard application at `/Users/pk/Projects/ai-models-hosting/dashboard-gpu-server/`. Initialize Nuxt 4 with PrimeVue 4 and Tailwind CSS v4, create the dashboard layout, configure routing without auth, set up the Pinia store skeleton, and create the base composable for WebSocket metric consumption. No authentication — direct FastAPI consumption.
+Scaffold the Nuxt 4 dashboard application at `frontend/`. Initialize Nuxt 4 with PrimeVue 4 and Tailwind CSS v4, create the dashboard layout, configure routing without auth, set up the Pinia store skeleton, and create the base composable for WebSocket metric consumption. No authentication — direct FastAPI consumption.
 
 ## Task Goals
 
-- Initialize Nuxt 4 project in `dashboard-gpu-server/`
+- Initialize Nuxt 4 project in `frontend/`
 - Install and configure PrimeVue 4 with Tailwind CSS v4
 - Create `dashboard.vue` layout with sidebar navigation and top bar
 - Configure pages: `/dashboard` (server overview), `/dashboard/servers/[id]` (detail)
@@ -67,7 +67,7 @@ Within each phase, files can be created in any order.
 
 1. Initialize Nuxt 4 project:
    ```bash
-   cd /Users/pk/Projects/ai-models-hosting/dashboard-gpu-server
+   cd /Users/pk/Projects/ModelPrism/frontend
    npx nuxi@latest init . --force
    ```
    Or manually create the project structure with `package.json`, `nuxt.config.ts`, `tsconfig.json`

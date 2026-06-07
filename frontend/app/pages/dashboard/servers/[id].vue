@@ -1,0 +1,124 @@
+<template>
+  <div>
+    <!-- Server header -->
+    <div class="mb-6 flex items-start gap-4">
+      <div class="flex-1">
+        <div class="flex items-center gap-3">
+          <Tag
+            :value="agentStatus"
+            :severity="statusSeverity"
+            class="text-sm"
+          />
+          <h1 class="text-2xl font-bold text-surface-800 dark:text-white">
+            {{ agentName }}
+          </h1>
+        </div>
+        <p class="mt-1 text-sm text-surface-500">
+          {{ hostname }} · {{ gpuSummary }}
+        </p>
+      </div>
+      <Button
+        v-if="agentStatus === 'offline'"
+        label="Reconnect"
+        icon="pi pi-refresh"
+        severity="secondary"
+        size="small"
+      />
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Card v-for="metric in metricCards" :key="metric.label">
+        <template #content>
+          <div class="text-center">
+            <span class="text-sm font-medium text-surface-500">{{ metric.label }}</span>
+            <div class="mt-1 text-2xl font-bold" :class="metric.color">
+              {{ metric.value }}
+            </div>
+            <span v-if="metric.unit" class="text-xs text-surface-400">{{ metric.unit }}</span>
+          </div>
+        </template>
+      </Card>
+    </div>
+
+    <!-- Placeholder for charts (M1-T9) -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <Card>
+        <template #title>GPU Utilization</template>
+        <template #content>
+          <div class="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-surface-200 dark:border-gray-700">
+            <p class="text-sm text-surface-400">Real-time uPlot chart (M1-T9)</p>
+          </div>
+        </template>
+      </Card>
+
+      <Card>
+        <template #title>System Resources</template>
+        <template #content>
+          <div class="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-surface-200 dark:border-gray-700">
+            <p class="text-sm text-surface-400">System resources chart (M1-T9)</p>
+          </div>
+        </template>
+      </Card>
+
+      <Card>
+        <template #title>Queue & Diagnostics</template>
+        <template #content>
+          <div class="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-surface-200 dark:border-gray-700">
+            <p class="text-sm text-surface-400">Queue diagnostics panel (M1-T9)</p>
+          </div>
+        </template>
+      </Card>
+
+      <Card>
+        <template #title>Running Models</template>
+        <template #content>
+          <div class="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-surface-200 dark:border-gray-700">
+            <p class="text-sm text-surface-400">Model list panel (M1-T9)</p>
+          </div>
+        </template>
+      </Card>
+    </div>
+
+    <!-- Live Log Viewer Placeholder -->
+    <Card class="mt-6">
+      <template #title>Live Logs</template>
+      <template #content>
+        <div class="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-surface-200 dark:border-gray-700">
+          <p class="text-sm text-surface-400">Live log viewer (M1-T9)</p>
+        </div>
+      </template>
+    </Card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+
+definePageMeta({
+  layout: 'dashboard',
+})
+
+const route = useRoute()
+const agentId = computed(() => route.params.id as string)
+
+const agentName = ref('cyan-koala-42')
+const hostname = ref('gpu-node-01')
+const agentStatus = ref('online')
+const gpuSummary = computed(() => '4× NVIDIA A100-SXM4-80GB')
+
+const statusSeverity = computed<'success' | 'warn' | 'secondary'>(() => {
+  switch (agentStatus.value) {
+    case 'online': return 'success'
+    case 'degraded': return 'warn'
+    default: return 'secondary'
+  }
+})
+
+const metricCards = computed(() => [
+  { label: 'GPU Util', value: '73.5%', unit: '', color: 'text-primary' },
+  { label: 'VRAM', value: '152.3 / 324.8', unit: 'GB', color: 'text-blue-600' },
+  { label: 'Running', value: '2', unit: 'models', color: 'text-green-600' },
+  { label: 'Uptime', value: '78.5h', unit: '', color: 'text-surface-600' },
+])
+</script>
