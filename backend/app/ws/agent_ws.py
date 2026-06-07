@@ -31,6 +31,8 @@ from app.schemas.ws_messages import (
     parse_agent_message,
 )
 from app.services.agent_manager import agent_registry
+from app.services.metric_service import metric_service
+from app.utils.metric_helpers import avg_gpu_field
 
 logger = logging.getLogger(__name__)
 
@@ -145,34 +147,97 @@ async def _set_connected_flag(agent_id: UUID) -> None:
 
 
 async def _handle_metrics(agent_id: UUID, data: dict[str, Any]) -> None:
-    """Store the latest metrics in Redis and publish to the metrics channel."""
-    if redis_client is None:
-        return
+    """Store the latest metrics in Redis, publish to the metrics channel, and persist to DB."""
+    if redis_client is not None:
+        try:
+            # Store latest metrics
+            await redis_client.set(
+                _REDIS_LATEST_METRICS_KEY.format(id=agent_id),
+                json.dumps(data, default=str),
+            )
 
+            # Publish to the metrics channel for dashboard broadcast (F16)
+            channel = _REDIS_METRICS_CHANNEL.format(id=agent_id)
+            await redis_client.publish(channel, json.dumps(data, default=str))
+        except Exception:
+            logger.exception("Failed to store/publish metrics for agent %s", agent_id)
+
+    # Persist to database via the metric ingestion service
     try:
-        # Store latest metrics
-        await redis_client.set(
-            _REDIS_LATEST_METRICS_KEY.format(id=agent_id),
-            json.dumps(data, default=str),
-        )
+        ts_float = data.get("ts", 0)
+        if isinstance(ts_float, (int, float)) and ts_float > 0:
+            from datetime import UTC, datetime
 
-        # Publish to the metrics channel for dashboard broadcast (F16)
-        channel = _REDIS_METRICS_CHANNEL.format(id=agent_id)
-        await redis_client.publish(channel, json.dumps(data, default=str))
+            ts = datetime.fromtimestamp(ts_float, tz=UTC)
+        else:
+            ts = datetime.now(UTC)
+
+        # Compute GPU averages across all GPU indices
+        gpus = data.get("gpu", [])
+        avg_util_pct = avg_gpu_field(gpus, "util_pct")
+        avg_mem_used = avg_gpu_field(gpus, "mem_used_mb")
+        avg_temp = avg_gpu_field(gpus, "temp_c")
+        avg_power = avg_gpu_field(gpus, "power_w")
+
+        metric_service.enqueue(
+            agent_id=agent_id,
+            ts=ts,
+            gpu_util_pct=avg_util_pct,
+            gpu_mem_used_mb=avg_mem_used,
+            gpu_temp_c=avg_temp,
+            gpu_power_w=avg_power,
+            gpu_cache_pct=data.get("gpu_cache_pct"),
+            ram_used_gb=data.get("ram_used_gb"),
+            ram_total_gb=data.get("ram_total_gb"),
+            cpu_pct=data.get("cpu_pct"),
+            load_1=data.get("load_1"),
+            load_5=data.get("load_5"),
+            load_15=data.get("load_15"),
+            disk_used_gb=data.get("disk_used_gb"),
+            disk_total_gb=data.get("disk_total_gb"),
+            disk_pct=data.get("disk_pct"),
+        )
     except Exception:
-        logger.exception("Failed to store/publish metrics for agent %s", agent_id)
+        logger.exception("Failed to enqueue metrics for agent %s", agent_id)
 
 
 async def _handle_vllm_metrics(agent_id: UUID, data: dict[str, Any]) -> None:
-    """Publish vLLM metrics to their own Redis channel."""
-    if redis_client is None:
-        return
+    """Publish vLLM metrics to their own Redis channel and persist to DB."""
+    if redis_client is not None:
+        try:
+            channel = _REDIS_VLLM_CHANNEL.format(id=agent_id)
+            await redis_client.publish(channel, json.dumps(data, default=str))
+        except Exception:
+            logger.exception("Failed to publish vLLM metrics for agent %s", agent_id)
 
+    # Persist vLLM metrics to database
     try:
-        channel = _REDIS_VLLM_CHANNEL.format(id=agent_id)
-        await redis_client.publish(channel, json.dumps(data, default=str))
+        ts_float = data.get("ts", 0)
+        if isinstance(ts_float, (int, float)) and ts_float > 0:
+            from datetime import UTC, datetime
+
+            ts = datetime.fromtimestamp(ts_float, tz=UTC)
+        else:
+            ts = datetime.now(UTC)
+
+        metric_service.enqueue_vllm(
+            agent_id=agent_id,
+            ts=ts,
+            running=data.get("running"),
+            waiting=data.get("waiting"),
+            total_requests=data.get("total_requests"),
+            prompt_tokens_total=data.get("prompt_tokens_total"),
+            gen_tokens_total=data.get("gen_tokens_total"),
+            ttft_p50_ms=data.get("ttft_p50_ms"),
+            ttft_p99_ms=data.get("ttft_p99_ms"),
+            tps=data.get("tps"),
+            gpu_cache_pct=data.get("gpu_cache_pct"),
+            prefix_cache_hit=data.get("prefix_cache_hit"),
+            error_rate=data.get("error_pct"),
+            trunc_rate=data.get("trunc_pct"),
+        )
     except Exception:
-        logger.exception("Failed to publish vLLM metrics for agent %s", agent_id)
+        logger.exception("Failed to enqueue vLLM metrics for agent %s", agent_id)
 
 
 async def _handle_command_progress(agent_id: UUID, data: dict[str, Any]) -> None:

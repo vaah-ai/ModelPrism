@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** High
-> **Status:** ⚪ Not Started
+> **Status:** 🟢 Complete
 > **Estimated Effort:** 3 days
 
 > **Impact from M1-T4:** Latest metrics are already stored in Redis at `agent:{id}:latest_metrics` and published to `metrics:{id}` / `vllm_metrics:{id}` Redis channels. This task should subscribe to those channels and persist to PostgreSQL. The WebSocket receive loop in `agent_ws.py` calls `_handle_metrics()` which does Redis-only storage — you can add DB writes there or create a separate consumer. Metrics schemas (`MetricsMessage`, `VLLMMetricsMessage`) are in `app/schemas/ws_messages.py`. The `AgentMetric` model already exists in `app/models/agent_metric.py` with tier column (default `raw`).

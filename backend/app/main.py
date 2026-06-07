@@ -17,6 +17,7 @@ Usage::
 from __future__ import annotations
 
 import logging
+import asyncio
 import os
 import signal
 from collections.abc import AsyncGenerator
@@ -37,6 +38,8 @@ from app.logging_config import setup_logging
 from app.middleware.correlation import CorrelationIDMiddleware
 from app.redis import close_redis, init_redis, verify_redis_connection
 from app.services.agent_manager import agent_registry
+from app.services.metric_service import metric_service
+from app.services.downsampler import run_downsampler
 from app.ws.agent_ws import router as agent_ws_router
 
 logger = logging.getLogger(__name__)
@@ -126,10 +129,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     else:
         logger.warning("Redis NOT available — degraded mode (rate-limiting and pub/sub disabled)")
 
+    # Inject Redis client into metric service for live queries
+    metric_service.set_redis(redis_client)
+
+    # Start the metric downsampling background worker
+    _downsampler_task = asyncio.create_task(run_downsampler())
+    logger.info("Downsampler background worker started")
+
     yield  # Application runs here
 
     # ---- Shutdown ----
     logger.info("Shutting down ModelPrism Backend...")
+    # Cancel the downsampler background task
+    _downsampler_task.cancel()
+    try:
+        await _downsampler_task
+    except asyncio.CancelledError:
+        pass
     # Notify all connected agents of graceful shutdown
     try:
         notified = await agent_registry.broadcast_shutdown(
