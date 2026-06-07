@@ -63,6 +63,16 @@ class Settings(BaseSettings):
         description="JWT access token expiration in hours",
     )
 
+    # --- Agent Registration ---
+    agent_token_expire_hours: int = Field(
+        default=24,
+        description="Agent registration token expiry in hours",
+    )
+    agent_claim_timeout_minutes: int = Field(
+        default=5,
+        description="Max minutes between claim and complete during two-phase registration",
+    )
+
     # --- Application ---
     cors_origins: str = Field(
         default="http://localhost:3000",

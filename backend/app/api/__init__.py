@@ -1,12 +1,12 @@
 """API route handlers package.
 
-Route modules will be added in subsequent tasks.
+Route modules are imported and included in ``api_router`` below.
 """
 
 from fastapi import APIRouter
 
 api_router = APIRouter()
 
+from app.api.agents import router as agents_router  # noqa: E402
 
-# Import and include sub-routers here as they are created:
-# from . import auth, agents, metrics, models, benchmarks, keys, usage, billing, users, proxy
+api_router.include_router(agents_router)
