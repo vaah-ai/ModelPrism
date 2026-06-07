@@ -8,7 +8,7 @@
 
 | ID | Title | Status | Priority | Tasks | Dependencies |
 |----|-------|--------|----------|-------|--------------|
-| M1 | Foundation — Backend + Agent + Dashboard | 🔵 In Progress | Critical | 0/9 🔵 In Progress | None |
+| M1 | Foundation — Backend + Agent + Dashboard | 🔵 In Progress | Critical | 3/9 🔵 In Progress | None |
 
 ### M1 Task Status
 
@@ -16,7 +16,7 @@
 |----|-------|--------|----------|--------|--------------|
 | M1-T1 | Backend Scaffolding | 🟢 Complete | Critical | 2 days | None |
 | M1-T2 | Database Schema | 🟢 Complete | Critical | 3 days | M1-T1 |
-| M1-T3 | Agent Registration API | ⚪ Not Started | Critical | 2 days | M1-T1, M1-T2 |
+| M1-T3 | Agent Registration API | 🟢 Complete | Critical | 2 days | M1-T1, M1-T2 |
 | M1-T4 | Agent WebSocket Handler | ⚪ Not Started | Critical | 3 days | M1-T3 |
 | M1-T5 | Agent Package | ⚪ Not Started | Critical | 4 days | M1-T4 |
 | M1-T6 | Metric Storage + API | ⚪ Not Started | High | 3 days | M1-T1, M1-T2, M1-T4 |
