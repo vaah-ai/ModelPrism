@@ -5,7 +5,7 @@
       <div
         v-for="stat in summaryStats"
         :key="stat.label"
-        class="card-base hover-lift cursor-pointer p-5"
+        class="card-base hover-glow cursor-pointer p-5"
       >
         <div class="flex items-center justify-between">
           <div>
@@ -169,7 +169,7 @@
         >
           <div
             class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full"
-            style="background-color: var(--accent-subtle)"
+            style="background-color: var(--accent-subtle); border: 1px solid var(--accent-light);"
           >
             <i class="pi pi-server text-accent" style="font-size: 1.75rem" />
           </div>

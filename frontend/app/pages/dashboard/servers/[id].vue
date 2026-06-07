@@ -33,7 +33,7 @@
       <div
         v-for="metric in metricCards"
         :key="metric.label"
-        class="card-base hover-lift p-5 text-center"
+        class="card-base hover-glow p-5 text-center"
       >
         <span
           class="text-sm font-medium"
