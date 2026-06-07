@@ -79,19 +79,19 @@ const ModelPrismPreset = definePreset(Aura, {
       },
       item: {
         focusBackground: '{surface.200}',
-        color: '{surface.500}',
+        color: '{surface.600}',
         focusColor: '{surface.800}',
         borderRadius: '0.375rem',
         gap: '0.5rem',
-        padding: '0.5rem 0.75rem',
+        padding: '0.375rem 0.75rem',
         icon: {
-          color: '{surface.400}',
-          focusColor: '{surface.700}',
+          color: '{surface.600}',
+          focusColor: '{surface.800}',
         },
       },
       submenuIcon: {
-        color: '{surface.400}',
-        focusColor: '{surface.700}',
+        color: '{surface.600}',
+        focusColor: '{surface.800}',
       },
       submenu: {
         indent: '0.75rem',
@@ -116,7 +116,7 @@ const ModelPrismPreset = definePreset(Aura, {
       },
       bodyCell: {
         borderColor: '{surface.200}',
-        padding: '0.75rem 1rem',
+        padding: '0.5rem 0.75rem',
       },
       header: {
         background: '{surface.50}',
@@ -128,7 +128,7 @@ const ModelPrismPreset = definePreset(Aura, {
         borderColor: '{surface.200}',
         color: '{surface.600}',
         hoverBackground: '{surface.200}',
-        padding: '0.75rem 1rem',
+        padding: '0.5rem 0.75rem',
       },
     },
     paginator: {

@@ -45,7 +45,7 @@
 
   /* Spacing / layout constants */
   --sidebar-width: 16rem;
-  --topbar-height: 4rem;
+  --topbar-height: 3.5rem;
   --card-radius: 0.625rem;
 }
 
@@ -134,6 +134,11 @@ code, pre, .font-mono, kbd {
 /* PrimeVue Card with border */
 .p-card {
   border: 1px solid var(--border-color) !important;
+}
+
+/* Compact PanelMenu */
+.p-panelmenu .p-panelmenu-panel + .p-panelmenu-panel {
+  margin-top: 0 !important;
 }
 
 /* Header bar */

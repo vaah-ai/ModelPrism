@@ -1,31 +1,31 @@
 <template>
   <div>
     <!-- Summary Header Cards -->
-    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div
         v-for="stat in summaryStats"
         :key="stat.label"
-        class="card-base hover-glow cursor-pointer p-5"
+        class="card-base hover-glow cursor-pointer p-4"
       >
         <div class="flex items-center justify-between">
           <div>
             <span
-              class="text-sm font-medium"
+              class="text-xs font-medium"
               style="color: var(--text-secondary)"
               >{{ stat.label }}</span
             >
-            <div class="mt-1 text-2xl font-bold" :class="stat.color">
+            <div class="mt-0.5 text-xl font-bold" :class="stat.color">
               {{ stat.value }}
             </div>
           </div>
           <div
-            class="flex h-12 w-12 items-center justify-center rounded-lg"
+            class="flex h-10 w-10 items-center justify-center rounded-lg"
             style="background-color: var(--accent-subtle)"
           >
             <i
               :class="`pi ${stat.icon}`"
               class="text-accent"
-              style="font-size: 1.25rem"
+              style="font-size: 1.1rem"
             />
           </div>
         </div>
@@ -33,10 +33,10 @@
     </div>
 
     <!-- Server List -->
-    <Card>
+    <Card :pt="{ title: { class: 'px-5 pt-4 pb-0' } }">
       <template #title>
         <div class="flex items-center justify-between">
-          <span style="color: var(--text-primary)">GPU Servers</span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary)">GPU Servers</span>
           <Button
             label="Add Server"
             icon="pi pi-plus"
@@ -54,8 +54,8 @@
           paginator
           :rows="25"
           :rows-per-page-options="[10, 25, 50]"
-          paginator-template="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-          current-page-report-template="Showing {first} to {last} of {totalRecords}"
+          paginator-template="{FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+          current-page-report-template="{first}–{last} of {totalRecords}"
           sort-field="lastSeenAt"
           :sort-order="-1"
           striped-rows
@@ -64,18 +64,19 @@
         >
           <Column field="name" header="Name" sortable>
             <template #body="{ data }">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <Tag
                   :value="data.status"
                   :severity="getStatusSeverity(data.status)"
+                  class="text-xs"
                 />
-                <span class="font-medium" style="color: var(--text-primary)">{{
+                <span class="text-sm font-medium" style="color: var(--text-primary)">{{
                   data.name
                 }}</span>
               </div>
             </template>
           </Column>
-          <Column header="GPU" sortable :sort-field="'gpuModel'">
+          <Column header="GPU" sortable :sort-field="'gpuModel'" class="text-sm">
             <template #body="{ data }">
               <span class="text-sm" style="color: var(--text-secondary)">
                 {{ data.gpuCount }}× {{ data.gpuModel }}
@@ -84,22 +85,22 @@
           </Column>
           <Column header="GPU Util" sortable :sort-field="'gpuUtilAvgPct'">
             <template #body="{ data }">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <ProgressBar
                   :value="Math.round(data.gpuUtilAvgPct ?? 0)"
                   :pt="{
                     root: {
                       style: {
-                        height: '8px',
-                        borderRadius: '4px',
+                        height: '6px',
+                        borderRadius: '3px',
                         background: 'var(--border-color)',
                       },
                     },
                     value: { style: { background: 'var(--accent)' } },
                   }"
-                  style="width: 80px"
+                  style="width: 64px"
                 />
-                <span class="text-sm" style="color: var(--text-secondary)"
+                <span class="text-xs" style="color: var(--text-secondary)"
                   >{{ Math.round(data.gpuUtilAvgPct ?? 0) }}%</span
                 >
               </div>
@@ -107,14 +108,14 @@
           </Column>
           <Column header="VRAM" sortable :sort-field="'gpuMemoryUsedMb'">
             <template #body="{ data }">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <ProgressBar
                   :value="getVramPct(data)"
                   :pt="{
                     root: {
                       style: {
-                        height: '8px',
-                        borderRadius: '4px',
+                        height: '6px',
+                        borderRadius: '3px',
                         background: 'var(--border-color)',
                       },
                     },
@@ -122,17 +123,17 @@
                       style: { background: getVramColor(getVramPct(data)) },
                     },
                   }"
-                  style="width: 80px"
+                  style="width: 64px"
                 />
-                <span class="text-sm" style="color: var(--text-secondary)">
+                <span class="text-xs" style="color: var(--text-secondary)">
                   {{ formatGb(data.gpuMemoryUsedMb) }} /
-                  {{ formatGb(data.gpuMemoryTotalMb) }} GB
+                  {{ formatGb(data.gpuMemoryTotalMb) }}
                 </span>
               </div>
             </template>
           </Column>
           <Column
-            header="Running Models"
+            header="Running"
             sortable
             :sort-field="'runningModels'"
           >
@@ -140,23 +141,25 @@
               <Tag
                 :value="data.runningModels ?? 0"
                 :severity="(data.runningModels ?? 0) > 0 ? 'info' : 'secondary'"
+                class="text-xs"
               />
             </template>
           </Column>
           <Column field="lastSeenAt" header="Last Seen" sortable>
             <template #body="{ data }">
-              <span class="text-sm" style="color: var(--text-muted)">
+              <span class="text-xs" style="color: var(--text-muted)">
                 {{ timeAgo(data.lastSeenAt) }}
               </span>
             </template>
           </Column>
-          <Column header="Actions" style="width: 80px">
+          <Column header="" style="width: 48px">
             <template #body>
               <Button
                 icon="pi pi-chevron-right"
                 severity="secondary"
                 text
                 rounded
+                :pt="{ root: { class: 'h-8 w-8' } }"
               />
             </template>
           </Column>
@@ -165,26 +168,27 @@
         <!-- Empty State -->
         <div
           v-if="!loading && agentList.length === 0"
-          class="py-16 text-center"
+          class="py-12 text-center"
         >
           <div
-            class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full"
+            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
             style="background-color: var(--accent-subtle); border: 1px solid var(--accent-light);"
           >
-            <i class="pi pi-server text-accent" style="font-size: 1.75rem" />
+            <i class="pi pi-server text-accent" style="font-size: 1.25rem" />
           </div>
           <h3
-            class="mb-2 text-lg font-semibold"
+            class="mb-1 text-base font-semibold"
             style="color: var(--text-primary)"
           >
             No GPU Servers Yet
           </h3>
-          <p class="mb-6 text-sm" style="color: var(--text-secondary)">
+          <p class="mb-4 text-xs" style="color: var(--text-secondary)">
             Add your first server to get started.
           </p>
           <Button
             label="Add Server"
             icon="pi pi-plus"
+            size="small"
             @click="showAddDialog = true"
           />
         </div>

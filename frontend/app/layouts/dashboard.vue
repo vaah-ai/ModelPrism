@@ -16,30 +16,32 @@
     >
       <!-- Brand -->
       <div
-        class="flex h-16 items-center justify-between border-b px-5"
+        class="flex h-14 items-center justify-between border-b px-4"
         style="border-color: var(--border-color)"
       >
-        <NuxtLink to="/dashboard" class="flex items-center gap-2.5">
+        <NuxtLink to="/dashboard" class="flex items-center gap-2">
           <!-- Logo mark -->
           <span
-            class="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
+            class="flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold"
             style="background-color: var(--accent); color: #fff"
           >MP</span>
-          <span class="text-base font-bold tracking-tight" style="color: var(--text-primary)"
+          <span class="text-sm font-bold tracking-tight" style="color: var(--text-primary)"
             >ModelPrism</span
           >
         </NuxtLink>
-        <button
-          class="flex h-11 w-11 items-center justify-center rounded-lg lg:hidden row-hover"
-          style="color: var(--text-muted)"
+        <Button
+          icon="pi pi-times"
+          text
+          rounded
+          severity="secondary"
+          class="lg:hidden"
+          :pt="{ root: { class: 'h-9 w-9' } }"
           @click="sidebarOpen = false"
-        >
-          <i class="pi pi-times" />
-        </button>
+        />
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto px-3 py-4">
+      <nav class="flex-1 overflow-y-auto px-2 py-3">
         <PanelMenu
           :model="navItems"
           class="border-none"
@@ -63,17 +65,19 @@
     <div class="flex flex-1 flex-col lg:pl-0">
       <!-- Top bar -->
       <header
-        class="header-base flex h-16 items-center justify-between px-4 lg:px-6"
+        class="header-base flex h-14 items-center justify-between px-4 lg:px-6"
       >
-        <div class="flex items-center gap-3">
-          <button
-            class="flex h-11 w-11 items-center justify-center rounded-lg row-hover"
-            style="color: var(--text-secondary)"
+        <div class="flex items-center gap-2">
+          <Button
+            icon="pi pi-bars"
+            text
+            rounded
+            severity="secondary"
+            :pt="{ root: { class: 'h-9 w-9' } }"
+            :aria-label="'Toggle sidebar'"
             @click="sidebarOpen = !sidebarOpen"
-          >
-            <i class="pi pi-bars text-xl" />
-          </button>
-          <h2 class="text-lg font-semibold" style="color: var(--text-primary)">
+          />
+          <h2 class="text-base font-semibold" style="color: var(--text-primary)">
             {{ pageTitle }}
           </h2>
         </div>
@@ -84,9 +88,7 @@
             text
             rounded
             severity="secondary"
-            :pt="{
-              root: { class: 'h-11 w-11' },
-            }"
+            :pt="{ root: { class: 'h-9 w-9' } }"
             :aria-label="themeLabel"
             v-tooltip="themeLabel"
             @click="cycleTheme"
@@ -96,7 +98,7 @@
       </header>
 
       <!-- Page content -->
-      <main class="flex-1 overflow-auto p-6">
+      <main class="flex-1 overflow-auto p-4 lg:p-5">
         <slot />
       </main>
     </div>
@@ -212,7 +214,7 @@ const panelMenuPt = {
   },
   headerLink: ({ context }: { context: { active: boolean } }) => ({
     class: [
-      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
+      "flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
     ],
     style: {
       color: context.active ? "var(--text-accent)" : "",
