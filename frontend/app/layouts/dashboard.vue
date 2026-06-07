@@ -105,6 +105,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+
 const appConfig = useAppConfig();
 const route = useRoute();
 const sidebarOpen = ref(false);
@@ -196,46 +197,25 @@ const navItems = ref<NavItem[]>([
   },
 ]);
 
-/**
- * PanelMenu pass-through options for a polished, dark-first sidebar.
- * Uses CSS custom properties for seamless light/dark switching.
- */
 const panelMenuPt = {
   root: {
     class: "border-none bg-transparent",
   },
   panel: {
-    class: "border-none mb-0.5 bg-transparent",
+    class: "border-none rounded-lg overflow-hidden",
   },
   submenu: {
-    class: "border-none bg-transparent",
+    class: "border-none",
   },
   header: {
-    class: "border-none rounded-lg overflow-hidden",
+    class: "rounded-lg overflow-hidden",
   },
   headerLink: ({ context }: { context: { active: boolean } }) => ({
     class: [
-      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150",
-      "no-underline cursor-pointer select-none",
-      context.active
-        ? "text-accent bg-active font-semibold"
-        : "text-secondary",
+      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
     ],
     style: {
-      color: context.active ? "var(--text-accent)" : "var(--text-secondary)",
-      backgroundColor: context.active ? "var(--bg-active)" : "transparent",
-    },
-    onMouseenter: function (this: HTMLElement) {
-      if (!this.classList.contains("bg-active")) {
-        this.style.backgroundColor = "var(--bg-hover)";
-        this.style.color = "var(--text-primary)";
-      }
-    },
-    onMouseleave: function (this: HTMLElement) {
-      if (!this.classList.contains("bg-active")) {
-        this.style.backgroundColor = "transparent";
-        this.style.color = "var(--text-secondary)";
-      }
+      color: context.active ? "var(--text-accent)" : "",
     },
   }),
   headerIcon: {
@@ -276,5 +256,4 @@ const panelMenuPt = {
 .sidebar-leave-to {
   opacity: 0;
 }
-
 </style>
