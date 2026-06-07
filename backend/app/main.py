@@ -16,6 +16,7 @@ Usage::
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import signal
@@ -35,8 +36,10 @@ from app.config import settings
 from app.database import close_db, engine
 from app.logging_config import setup_logging
 from app.middleware.correlation import CorrelationIDMiddleware
-from app.redis import close_redis, init_redis, verify_redis_connection
+from app.redis import close_redis, init_redis, redis_client, verify_redis_connection
 from app.services.agent_manager import agent_registry
+from app.services.downsampler import run_downsampler
+from app.services.metric_service import metric_service, run_flush_loop
 from app.ws.agent_ws import router as agent_ws_router
 
 logger = logging.getLogger(__name__)
@@ -126,10 +129,34 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     else:
         logger.warning("Redis NOT available — degraded mode (rate-limiting and pub/sub disabled)")
 
+    # Inject Redis client into metric service for live queries
+    metric_service.set_redis(redis_client)
+
+    # Start the metric flush background worker (every 5 seconds)
+    _flush_task = asyncio.create_task(run_flush_loop(metric_service))
+    logger.info("Metric flush loop started (every 5s)")
+
+    # Start the metric downsampling background worker (every 60 seconds)
+    _downsampler_task = asyncio.create_task(run_downsampler())
+    logger.info("Downsampler background worker started")
+
     yield  # Application runs here
 
     # ---- Shutdown ----
     logger.info("Shutting down ModelPrism Backend...")
+    # Cancel the metric flush loop
+    _flush_task.cancel()
+    try:
+        await _flush_task
+    except asyncio.CancelledError:
+        pass
+
+    # Cancel the downsampler background task
+    _downsampler_task.cancel()
+    try:
+        await _downsampler_task
+    except asyncio.CancelledError:
+        pass
     # Notify all connected agents of graceful shutdown
     try:
         notified = await agent_registry.broadcast_shutdown(
@@ -137,7 +164,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
         if notified:
             logger.info("Sent shutdown notification to %d agent(s)", notified)
-            import asyncio
 
             await asyncio.sleep(min(10, settings.ws_reconnect_delay_seconds))
     except Exception:
