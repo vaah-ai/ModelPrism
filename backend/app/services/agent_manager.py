@@ -21,7 +21,7 @@ from app.config import settings
 from app.models.agent import Agent
 from app.models.agent_token import AgentToken
 from app.models.enums import AgentStatus, TokenStatus
-from app.utils.crypto import generate_token, get_token_prefix, hash_token
+from app.utils.crypto import generate_agent_id, generate_token, get_token_prefix, hash_token
 from app.utils.naming import generate_unique_name
 
 if TYPE_CHECKING:
@@ -144,11 +144,12 @@ async def claim_agent(
         agent.hostname,
     )
 
-    # Construct WebSocket URL (placeholder — uses request host in practice)
-    ws_url = f"ws://localhost:8000/ws/agents/{agent.id}"
+    # Construct WebSocket URL with the human-friendly agent ID
+    agent_id_str = generate_agent_id(agent.id)
+    ws_url = f"ws://localhost:8000/ws/agents/{agent_id_str}"
 
     return {
-        "agent_id": str(agent.id),
+        "agent_id": agent_id_str,
         "name": agent.name,
         "ws_url": ws_url,
     }
@@ -211,6 +212,8 @@ async def complete_registration(
     agent.disk_info = _ensure_json_value(hardware.get("disk"))  # type: ignore[assignment]
     agent.os_info = _ensure_str(hardware.get("os"))
     agent.agent_version = _ensure_str(hardware.get("agent_version"))
+    if hardware.get("vllm_version"):
+        agent.vllm_version = _ensure_str(hardware.get("vllm_version"))
     agent.status = AgentStatus.ONLINE
     agent.last_seen_at = now
     agent.updated_at = now
@@ -247,10 +250,11 @@ async def complete_registration_v2(
         A dict with agent_id, name, ws_url, and config.
     """
     agent = await complete_registration(db, agent_id, hardware)
+    agent_id_str = generate_agent_id(agent.id)
     return {
-        "agent_id": str(agent.id),
+        "agent_id": agent_id_str,
         "name": agent.name,
-        "ws_url": _build_ws_url(agent.id),
+        "ws_url": _build_ws_url(agent_id_str),
         "config": {
             "poll_interval_seconds": 2,
             "heartbeat_interval_seconds": 15,
@@ -285,13 +289,13 @@ async def list_agents(db: AsyncSession) -> list[Agent]:
     return list(result.scalars().all())
 
 
-def _build_ws_url(agent_id: UUID) -> str:
+def _build_ws_url(agent_id_str: str) -> str:
     """Build the WebSocket URL for an agent.
 
     For MVP this returns a localhost URL.  In production this should be
     built from the request's host header or a configured external URL.
     """
-    return f"ws://localhost:8000/ws/agents/{agent_id}"
+    return f"ws://localhost:8000/ws/agents/{agent_id_str}"
 
 
 def _ensure_json_value(

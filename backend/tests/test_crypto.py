@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from app.utils.crypto import (
     TOKEN_PREFIX,
+    generate_agent_id,
     generate_token,
     get_token_prefix,
     hash_token,
@@ -88,3 +91,27 @@ class TestVerifyToken:
         token = generate_token()
         expected_hash = hash_token(token)
         assert verify_token("mp_wrong-token", expected_hash) is False
+
+
+class TestGenerateAgentId:
+    """Tests for agent ID generation."""
+
+    def test_has_ag_prefix(self) -> None:
+        agent_id = generate_agent_id(UUID("00000000-0000-0000-0000-000000000001"))
+        assert agent_id.startswith("ag_")
+
+    def test_is_string(self) -> None:
+        agent_id = generate_agent_id(UUID("00000000-0000-0000-0000-000000000001"))
+        assert isinstance(agent_id, str)
+        assert len(agent_id) > 3  # "ag_" + at least 1 char
+
+    def test_different_uuids_different_ids(self) -> None:
+        id1 = generate_agent_id(UUID("00000000-0000-0000-0000-000000000001"))
+        id2 = generate_agent_id(UUID("00000000-0000-0000-0000-000000000002"))
+        assert id1 != id2
+
+    def test_deterministic(self) -> None:
+        uuid_obj = UUID("550e8400-e29b-41d4-a716-446655440000")
+        id1 = generate_agent_id(uuid_obj)
+        id2 = generate_agent_id(uuid_obj)
+        assert id1 == id2

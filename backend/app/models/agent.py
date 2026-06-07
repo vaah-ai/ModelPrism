@@ -51,6 +51,11 @@ class Agent(Base):
         nullable=True,
         comment="SemVer of the installed modelprism-agent package",
     )
+    vllm_version: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="Installed vLLM version, e.g. '0.6.0'",
+    )
     status: Mapped[AgentStatus] = mapped_column(
         default=AgentStatus.OFFLINE,
         nullable=False,

@@ -8,7 +8,7 @@ are deferred to the ``test_integration.py`` module.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
 import pytest
@@ -114,12 +114,21 @@ class TestClaimAgent:
         mock_db.execute.return_value = mock_result
         mock_db.flush = AsyncMock()
 
-        response = await client.post(
-            "/api/agents/register",
-            json={"token": VALID_TOKEN, "hostname": "gpu-node-1"},
-        )
+        with patch(
+            "app.services.agent_manager.generate_agent_id",
+            return_value="ag_AbCdEf123456",
+        ):
+            response = await client.post(
+                "/api/agents/register",
+                json={"token": VALID_TOKEN, "hostname": "gpu-node-1"},
+            )
 
         assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["agent_id"] == "ag_AbCdEf123456"
+        assert data["name"]
+        assert data["ws_url"].startswith("ws://")
+        assert "ag_AbCdEf123456" in data["ws_url"]
 
     @pytest.mark.asyncio
     async def test_claim_invalid_token(self, client: AsyncClient, mock_db: AsyncMock) -> None:
@@ -230,7 +239,7 @@ class TestListAgents:
         assert len(data["data"]) == 1
         resource = data["data"][0]
         assert resource["type"] == "agent"
-        assert resource["id"]
+        assert resource["id"].startswith("ag_")
         assert resource["attributes"]["name"] == "cyan-koala-42"
         assert resource["attributes"]["hostname"] == "gpu-node-1"
         assert resource["attributes"]["status"] == "online"
@@ -263,6 +272,7 @@ class TestGetAgent:
         data = response.json()
         resource = data["data"]
         assert resource["type"] == "agent"
+        assert resource["id"].startswith("ag_")
         assert resource["attributes"]["name"] == "cyan-koala-42"
         assert resource["attributes"]["hostname"] == "gpu-node-1"
 
@@ -329,16 +339,16 @@ class TestCompleteRegistration:
                     "available_gb": 1500,
                 },
                 "os": "Ubuntu 22.04",
-                "kernel": "5.15.0-generic",
                 "agent_version": "0.1.0",
+                "vllm_version": "0.6.0",
             },
         )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["agent_id"]
+        assert data["agent_id"].startswith("ag_")
         assert data["name"] == "cyan-koala-42"
-        assert data["ws_url"]
+        assert "ag_" in data["ws_url"]
         assert "config" in data
         assert data["config"]["poll_interval_seconds"] == 2
         assert data["config"]["heartbeat_interval_seconds"] == 15

@@ -1,7 +1,7 @@
-"""Cryptographic utilities for agent token management.
+"""Cryptographic utilities for agent token management and ID generation.
 
 Provides token generation, hashing (SHA-256), prefix extraction,
-and constant-time verification.
+constant-time verification, and agent ID generation.
 """
 
 from __future__ import annotations
@@ -9,8 +9,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
+from uuid import UUID
 
 TOKEN_PREFIX = "mp_"
+AGENT_ID_PREFIX = "ag_"
 
 
 def generate_token() -> str:
@@ -61,3 +63,38 @@ def verify_token(token: str, expected_hash: str) -> bool:
     """
     computed = hash_token(token)
     return hmac.compare_digest(computed, expected_hash)
+
+
+_BASE62_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+
+def _uuid_to_base62(uuid_obj: UUID) -> str:
+    """Convert a UUID to a compact base-62 string.
+
+    Returns a string of up to 22 characters representing the 128-bit
+    UUID value.  The encoding is lossless and produces shorter IDs
+    than the standard hex representation.
+    """
+    value = uuid_obj.int
+    if value == 0:
+        return "0"
+    chars: list[str] = []
+    while value > 0:
+        value, remainder = divmod(value, 62)
+        chars.append(_BASE62_ALPHABET[remainder])
+    return "".join(reversed(chars))
+
+
+def generate_agent_id(uuid_obj: UUID) -> str:
+    """Generate a compact, human-friendly agent ID with ``ag_`` prefix.
+
+    The UUID is base-62 encoded for compactness, then prefixed with
+    ``ag_``.  Example output: ``"ag_1A2b3C4d5E6f7G8h"``.
+
+    Args:
+        uuid_obj: The agent's UUID primary key.
+
+    Returns:
+        A string like ``"ag_1A2b3C4d5E6f7G8h"``.
+    """
+    return AGENT_ID_PREFIX + _uuid_to_base62(uuid_obj)

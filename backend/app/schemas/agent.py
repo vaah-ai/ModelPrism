@@ -56,6 +56,11 @@ class AgentCompleteRequest(BaseModel):
         max_length=50,
         description="Agent package SemVer, e.g. '0.1.0'",
     )
+    vllm_version: str | None = Field(
+        default=None,
+        max_length=50,
+        description="vLLM version installed on the server, e.g. '0.6.0'",
+    )
 
 
 class GPUInfo(BaseModel):
@@ -107,6 +112,11 @@ class DiskInfo(BaseModel):
         ge=0,
         description="Total disk capacity in gigabytes",
     )
+    used_gb: float | None = Field(
+        default=None,
+        ge=0,
+        description="Used disk space in gigabytes",
+    )
     available_gb: float | None = Field(
         default=None,
         ge=0,
@@ -140,7 +150,7 @@ class ClaimResponse(BaseModel):
 
     agent_id: str = Field(
         ...,
-        description="Persistent agent identifier (UUID string)",
+        description="Persistent agent identifier (ag_ prefix, e.g. ag_1A2b3C4d)",
     )
     name: str = Field(
         ...,

@@ -12,8 +12,11 @@ Auth, agent registration, and proxy endpoints use plain JSON instead.
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+from app.utils.crypto import generate_agent_id
 
 
 class JSONAPIResource(BaseModel):
@@ -65,6 +68,7 @@ _ATTRIBUTE_MAP: dict[str, dict[str, str]] = {
         "name": "name",
         "hostname": "hostname",
         "agent_version": "agent-version",
+        "vllm_version": "vllm-version",
         "status": "status",
         "gpu_info": "gpu-info",
         "cpu_info": "cpu-info",
@@ -129,12 +133,18 @@ def resource_from_orm(
                         value = value.isoformat()
                     attributes[_to_kebab(field_name)] = value
 
-    # Build self-link
-    links = {"self": f"/api/agents/{obj.id}"}
+    # Build self-link and ID using the human-friendly agent_id
+    raw_id = obj.id
+    if isinstance(raw_id, UUID):
+        agent_id_str = generate_agent_id(raw_id)
+    else:
+        agent_id_str = str(raw_id)
+
+    links = {"self": f"/api/agents/{agent_id_str}"}
 
     return JSONAPIResource(
         type=type_name,
-        id=str(obj.id),
+        id=agent_id_str,
         attributes=attributes,
         links=links,
     )
