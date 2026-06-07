@@ -14,7 +14,7 @@
 
 | ID | Title | Status | Priority | Effort | Dependencies |
 |----|-------|--------|----------|--------|--------------|
-| M1-T1 | Backend Scaffolding | ⚪ Not Started | Critical | 2 days | None |
+| M1-T1 | Backend Scaffolding | 🟢 Complete | Critical | 2 days | None |
 | M1-T2 | Database Schema | ⚪ Not Started | Critical | 3 days | M1-T1 |
 | M1-T3 | Agent Registration API | ⚪ Not Started | Critical | 2 days | M1-T1, M1-T2 |
 | M1-T4 | Agent WebSocket Handler | ⚪ Not Started | Critical | 3 days | M1-T3 |
