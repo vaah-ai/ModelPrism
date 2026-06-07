@@ -8,11 +8,11 @@
 </template>
 
 <script setup lang="ts">
-const appConfig = useAppConfig()
+const appConfig = useAppConfig();
 useHead({
   titleTemplate: `%s — ${appConfig.title}`,
   htmlAttrs: {
-    lang: 'en',
+    lang: "en",
   },
-})
+});
 </script>

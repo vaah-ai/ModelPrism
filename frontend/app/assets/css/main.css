@@ -1,1 +1,262 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ============================================
+   ModelPrism Design Tokens
+   Bold & Tech-forward — Dark-first, Cyan accent
+   ============================================ */
+
+:root {
+  --font-mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+  --font-sans: 'Fira Sans', 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Light theme (default) */
+  --bg-page: #f5f5f0;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ecece7;
+  --bg-sidebar: #ffffff;
+  --border-color: #d4d4c8;
+  --border-subtle: #e8e8e0;
+
+  --text-primary: #1a1a18;
+  --text-secondary: #6b6b60;
+  --text-muted: #9c9c90;
+  --text-accent: #0e7a8c;
+  --text-success: #1a7a3a;
+  --text-warning: #a65a0a;
+  --text-danger: #c42323;
+
+  --accent: #0f8a9e;
+  --accent-hover: #0d6f80;
+  --accent-light: #e0f5f8;
+  --accent-subtle: rgba(15, 138, 158, 0.08);
+
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+
+  --sidebar-width: 16rem;
+  --topbar-height: 4rem;
+  --card-radius: 0.625rem;
+}
+
+/* Dark theme via prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #080808;
+    --bg-surface: #121212;
+    --bg-elevated: #1a1a1a;
+    --bg-sidebar: #0c0c0c;
+    --border-color: #2a2a2a;
+    --border-subtle: #1f1f1f;
+
+    --text-primary: #e8e8e4;
+    --text-secondary: #949490;
+    --text-muted: #6a6a64;
+    --text-accent: #22d3ee;
+    --text-success: #4ade80;
+    --text-warning: #fbbf24;
+    --text-danger: #f87171;
+
+    --accent: #22d3ee;
+    --accent-hover: #67e8f9;
+    --accent-light: rgba(34, 211, 238, 0.08);
+    --accent-subtle: rgba(34, 211, 238, 0.05);
+
+    --danger: #ef4444;
+    --success: #4ade80;
+    --warning: #f59e0b;
+  }
+}
+
+/* ============================================
+   Global Base Styles
+   ============================================ */
+
+html {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mono font for code/technical elements */
+code, pre, .font-mono, kbd {
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Card base — consistent surface styling */
+.card-base {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-radius);
+}
+
+/* Card with elevated background */
+.card-elevated {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--card-radius);
+}
+
+/* Header bar base */
+.header-base {
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Sidebar base */
+.sidebar-base {
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+}
+
+/* Hover lift effect for cards */
+.hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Hover glow — accent border on hover */
+.hover-glow {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.hover-glow:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-subtle);
+}
+
+/* Accent text */
+.text-accent {
+  color: var(--text-accent);
+}
+
+/* Accent background */
+.bg-accent {
+  background-color: var(--accent);
+}
+.bg-accent-hover:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Accent border */
+.border-accent {
+  border-color: var(--accent);
+}
+
+/* Accent subtle background */
+.bg-accent-subtle {
+  background-color: var(--accent-subtle);
+}
+
+/* Severity text colors */
+.text-severity-success {
+  color: var(--text-success);
+}
+.text-severity-warning {
+  color: var(--text-warning);
+}
+.text-severity-danger {
+  color: var(--text-danger);
+}
+
+/* Label style — small uppercase */
+.label-chip {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Data value style — monospaced, bold */
+.data-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+}
+
+.data-value-lg {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+/* Stat row — label + value on same line */
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Metric group — thin label above value */
+.metric-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.metric-group .metric-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.metric-group .metric-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Smooth theme transitions */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
