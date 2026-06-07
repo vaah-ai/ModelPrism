@@ -1,0 +1,6 @@
+[submodule "modelprism-agent"]
+	path = modelprism-agent
+	url = git@github.com:vaah-ai/modelprism-agent.git
+[submodule "ai-base-prompts"]
+	path = ai-base-prompts
+	url = git@git6.webreinvent.com:open/ai-base-prompts.git

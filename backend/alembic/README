@@ -1,0 +1,32 @@
+Alembic Database Migrations
+============================
+
+This directory contains Alembic migration scripts for the ModelPrism backend.
+
+Prerequisites
+-------------
+- Python 3.11+ with dependencies installed (see requirements.txt or pyproject.toml)
+- A running PostgreSQL instance
+- A valid .env file in backend/ with DATABASE_URL set
+
+Commands
+--------
+  # Apply all pending migrations:
+  alembic upgrade head
+
+  # Roll back the most recent migration:
+  alembic downgrade -1
+
+  # Generate a new migration automatically (from model changes):
+  alembic revision --autogenerate -m "description of changes"
+
+  # Preview the SQL that would be generated (offline mode):
+  alembic upgrade head --sql
+
+Architecture
+------------
+- Migrations use the async SQLAlchemy engine from app.database.
+- The env.py reads the database URL from app.config.settings at runtime.
+- Each migration is a single Python file in the versions/ directory.
+- Never edit a migration that has already been applied to production.
+  Create a new migration instead.
