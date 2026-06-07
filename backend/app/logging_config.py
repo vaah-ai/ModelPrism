@@ -12,13 +12,14 @@ import sys
 from typing import Any
 
 from app.config import settings
+from app.middleware.correlation import CorrelationIDFilter
 
 
 class JSONFormatter(logging.Formatter):
     """JSON log formatter for production use.
 
     Outputs log records as JSON objects with timestamp, level, module,
-    and message fields. Extra keyword arguments are included.
+    and message fields. Extra keyword arguments (correlation_id) are included.
     """
 
     def format(self, record: logging.LogRecord) -> str:
@@ -40,17 +41,11 @@ def setup_logging() -> None:
 
     In production (``environment != "development"``), JSON-formatted logs
     are output to stdout. In development, plain-text is used.
+
+    A ``CorrelationIDFilter`` is added to the console handler so that all
+    log records emitted during a request include the ``correlation_id`` field.
     """
     is_dev = settings.environment == "development"
-
-    handlers: dict[str, Any] = {
-        "console": {
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
-            "formatter": "json" if not is_dev else "plain",
-            "level": "DEBUG" if is_dev else "INFO",
-        },
-    }
 
     logging.config.dictConfig(
         {
@@ -61,11 +56,26 @@ def setup_logging() -> None:
                     "()": JSONFormatter,
                 },
                 "plain": {
-                    "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+                    "format": (
+                        "%(asctime)s [%(levelname)s] [%(correlation_id)s] %(name)s: %(message)s"
+                    ),
                     "datefmt": "%Y-%m-%d %H:%M:%S",
                 },
             },
-            "handlers": handlers,
+            "filters": {
+                "correlation_id": {
+                    "()": CorrelationIDFilter,
+                },
+            },
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "stream": sys.stdout,
+                    "formatter": "json" if not is_dev else "plain",
+                    "filters": ["correlation_id"],
+                    "level": "DEBUG" if is_dev else "INFO",
+                },
+            },
             "root": {
                 "level": "DEBUG" if is_dev else "INFO",
                 "handlers": ["console"],

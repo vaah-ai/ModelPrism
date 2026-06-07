@@ -56,3 +56,6 @@ ignore_errors = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: marks tests that require real PostgreSQL and Redis (docker-compose)",
+]

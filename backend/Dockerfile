@@ -38,7 +38,6 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY app/ ./app/
-COPY .env.example ./.env
 
 # Expose application port
 EXPOSE 8000

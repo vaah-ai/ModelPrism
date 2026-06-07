@@ -7,6 +7,7 @@ This module creates and configures the FastAPI application with:
 - Prometheus metrics endpoint
 - Health check endpoint
 - Global exception handlers
+- Signal handlers for graceful shutdown
 
 Usage::
 
@@ -16,7 +17,8 @@ Usage::
 from __future__ import annotations
 
 import logging
-import sys
+import os
+import signal
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -37,6 +39,31 @@ from app.redis import close_redis, init_redis, verify_redis_connection
 
 logger = logging.getLogger(__name__)
 
+_shutting_down = False
+
+
+def _handle_signal(signum: int, frame: object) -> None:
+    """Handle termination signals by setting the shutdown flag.
+
+    uvicorn's event loop will pick this up and trigger the lifespan
+    exit path, which runs close_db and close_redis.
+    """
+    global _shutting_down
+    if _shutting_down:
+        # Second signal — force immediate exit
+        logger.warning("Forced shutdown (signal %d)", signum)
+        os._exit(1)
+    _shutting_down = True
+    logger.info("Shutdown requested (signal %d) — draining connections...", signum)
+    # Restore default handler so a second signal forces exit
+    signal.signal(signum, signal.SIG_DFL)
+
+
+def _register_signal_handlers() -> None:
+    """Register signal handlers for graceful shutdown."""
+    signal.signal(signal.SIGTERM, _handle_signal)
+    signal.signal(signal.SIGINT, _handle_signal)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -44,6 +71,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # ---- Startup ----
     setup_logging()
+    _register_signal_handlers()
     logger.info(
         "Starting ModelPrism Backend v%s (environment=%s, cloud_mode=%s)",
         settings.version,
@@ -63,7 +91,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.info("Database connected: %s", db_host)
     except Exception:
         logger.exception("Failed to connect to database")
-        sys.exit(1)
+        os._exit(1)
 
     # Initialize Redis (non-fatal if unavailable)
     redis_available = False
