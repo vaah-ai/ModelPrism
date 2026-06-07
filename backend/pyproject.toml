@@ -53,6 +53,11 @@ ignore_errors = true
 module = "redis.asyncio"
 ignore_errors = true
 
+# SQLAlchemy Table type stubs don't expose .indexes
+[[tool.mypy.overrides]]
+module = "tests.test_models"
+disable_error_code = ["attr-defined"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
