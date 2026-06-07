@@ -29,6 +29,14 @@ Execute ModelPrism development tasks sequentially. Each step's file has the full
 4. Use **Read** for files, **Edit** for modifications, **Write** for new files. Bash only for actual shell commands.
 5. Report failures honestly. Mark unverifiable items `manual-verified`. Never suppress test failures.
 
+## Step 1 Behavior
+
+Step 01 now follows an **auto-select with override** flow:
+1. Read the milestone dashboard to identify the **last completed task** and present it.
+2. Auto-select the next task: check for interruptions first, then find the first eligible `⚪ Not Started` task with all dependencies met. On the critical path, prefer the task with the most downstream dependents.
+3. Present the selection to the user along with any **alternative unblocked tasks** (for possible parallel execution).
+4. Wait for the user to **confirm, override, or cancel** before updating status and proceeding.
+
 ## Workflow (14 Steps)
 
 | Phase | Step | File |
