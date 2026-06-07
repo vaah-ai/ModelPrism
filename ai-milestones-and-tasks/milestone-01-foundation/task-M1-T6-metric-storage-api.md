@@ -6,6 +6,7 @@
 > **Estimated Effort:** 3 days
 
 > **Impact from M1-T4:** Latest metrics are already stored in Redis at `agent:{id}:latest_metrics` and published to `metrics:{id}` / `vllm_metrics:{id}` Redis channels. This task should subscribe to those channels and persist to PostgreSQL. The WebSocket receive loop in `agent_ws.py` calls `_handle_metrics()` which does Redis-only storage — you can add DB writes there or create a separate consumer. Metrics schemas (`MetricsMessage`, `VLLMMetricsMessage`) are in `app/schemas/ws_messages.py`. The `AgentMetric` model already exists in `app/models/agent_metric.py` with tier column (default `raw`).
+> **Impact from M1-T5:** The agent now sends metrics via WebSocket using the message shapes defined in `modelprism_agent/schemas.py` (which mirror `app/schemas/ws_messages.py`). The agent pushes two message types: `metrics` (flat JSON with `gpu` array + system fields) and `vllm_metrics` (per-instance vLLM telemetry). The agent's `MetricCollector` in `modelprism_agent/metrics/collector.py` emits snapshots at 2-second intervals. The agent also pushes logs via `POST /api/agents/{id}/logs` through the `LogStreamer`. The registration payload (`POST /api/agents/register`) includes `gpus`, `cpu`, `disk`, and `os` fields matching the backend's `complete_registration()` schema in `agent_manager.py`. The agent package is at `/Users/pk/Projects/ModelPrism/modelprism-agent/`.
 
 ## Description
 

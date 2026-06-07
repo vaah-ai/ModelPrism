@@ -6,6 +6,7 @@
 > **Estimated Effort:** 2 days
 
 > **Impact from M1-T4:** Agent metrics are already published to Redis channels `metrics:{agent_id}` and `vllm_metrics:{agent_id}` by the agent WebSocket handler. This task needs to create a *dashboard* WebSocket endpoint (`/ws/dashboard/{agent_id}`) that subscribes to these Redis channels and forwards to browser clients. The `PubSubHelper` class in `app/redis.py` can be used for subscription. Connection state is tracked in Redis at `agent:{id}:ws_connected` (TTL-based). Running vLLM instances are stored at `agent:{id}:running_instances`.
+> **Impact from M1-T5:** The agent pushes two metric types over WebSocket: `metrics` (GPU + system snapshot) and `vllm_metrics` (per-instance LLM telemetry). The `metrics` message format is flat JSON: `{"type":"metrics","ts":...,"gpu":[{index,util_pct,mem_used_mb,mem_total_mb,temp_c,power_w}],"ram_used_gb":...,"cpu_pct":...,"disk_pct":...}`. The `vllm_metrics` format: `{"type":"vllm_metrics","instance_id":...,"model_name":...,"running":...,"waiting":...}`. Agent heartbeats are `{"type":"heartbeat","ts":...,"agents_running":[]}` sent every 15s. Metric push interval is 2s. The agent also streams logs via `POST /api/agents/{id}/logs`.
 
 ## Description
 
