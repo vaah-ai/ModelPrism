@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** Critical
-> **Status:** ⚪ Not Started
+> **Status:** 🟢 Complete
 > **Estimated Effort:** 2 days
 
 ## Description
@@ -22,17 +22,48 @@ Scaffold the Nuxt 4 dashboard application at `/Users/pk/Projects/ai-models-hosti
 
 ## Implementation Plan
 
-> ⚠️ Analyze this plan thoroughly before implementing.
+> ⚠️ Plan documented 2026-06-07. SPA mode (ssr: false), no auth for MVP, consumes FastAPI directly.
 
-### Pre-Implementation Analysis
+### Architecture Decision
+- **SPA Mode** (`ssr: false`) — client-side only rendering. No SSR complexity needed for dashboard.
+- **No Nitro API routes** — no `server/api/` directory. Dashboard calls FastAPI directly.
+- **No auth** for MVP — runtime config provides backend URL; no JWT headers.
+- **PrimeVue `cssLayer: false`** — avoids CSS layer conflicts with Tailwind v4.
 
-- Review the existing `dashboard-gpu-server/` directory — the old monolithic dashboard will be replaced
-- Review `requirements/07-directory-structure.md` for the frontend layout
-- Review `requirements/02-architecture-overview.md` for frontend ↔ backend communication pattern
-- Review `requirements/05-tech-stack.md` for Nuxt 4, PrimeVue 4, Tailwind CSS v4 specifics
-- Invoke `nuxt` skill for Nuxt 4 setup patterns, PrimeVue integration, and auto-import configuration
+### Files to Create (17 files, 6 phases)
 
-### Steps
+**Phase 1 — Project Configs**
+1. `package.json` — Nuxt 4 + PrimeVue 4 + Tailwind v4 + Pinia + VueUse + uPlot + ECharts
+2. `nuxt.config.ts` — ssr: false, PrimeVue (Aura), Pinia, Tailwind v4 CSS, runtime config
+3. `tsconfig.json` — Nuxt 4 auto-generated, strict mode
+4. `.env.example` — `NUXT_PUBLIC_BACKEND_URL=http://localhost:8000`
+5. `app/app.config.ts` — App metadata (title, version)
+
+**Phase 2 — CSS & App Shell**
+6. `app/assets/css/main.css` — `@import "tailwindcss"`
+7. `app/app.vue` — NuxtLayout + NuxtPage + PrimeVue Toast
+
+**Phase 3 — Layouts**
+8. `app/layouts/default.vue` — Minimal layout (used by index redirect)
+9. `app/layouts/dashboard.vue` — Sidebar (PanelMenu) + top bar + content slot, responsive
+
+**Phase 4 — Pages**
+10. `app/error.vue` — Nuxt error page
+11. `app/pages/index.vue` — Redirect to `/dashboard`
+12. `app/pages/dashboard/index.vue` — Server overview placeholder
+13. `app/pages/dashboard/servers/[id].vue` — Server detail placeholder
+
+**Phase 5 — State (Pinia)**
+14. `stores/agents.ts` — Agent list store with typed Agent interface, actions, metric delta merge
+15. `stores/metrics.ts` — Metric buffer store, per-agent histogram, summary stats
+
+**Phase 6 — Composables**
+16. `composables/useApi.ts` — `$fetch` wrapper with baseURL to FastAPI
+17. `composables/useWebSocketMetrics.ts` — WebSocket lifecycle: connect, 500ms batch, buffer, auto-reconnect
+
+### Implementation Order
+Phases are sequential: 1 → 2 → 3 → 4 → 5 → 6.
+Within each phase, files can be created in any order.
 
 1. Initialize Nuxt 4 project:
    ```bash

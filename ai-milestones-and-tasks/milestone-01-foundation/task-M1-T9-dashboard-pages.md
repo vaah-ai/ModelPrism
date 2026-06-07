@@ -3,6 +3,16 @@
 > **Milestone:** M1 (Foundation)
 > **Priority:** High
 > **Status:** ⚪ Not Started
+>
+> **Impact from M1-T8:** Nuxt Dashboard Scaffold completed.
+> - Dashboard layout at `app/layouts/dashboard.vue` with sidebar PanelMenu navigation and responsive overlay
+> - Pages scaffolded: `dashboard/index.vue` (overview) and `dashboard/servers/[id].vue` (detail) with placeholder panels marked "M1-T9"
+> - Pinia stores: `stores/agents.ts` (agent list with fetchAgents, applyMetricDelta, updateAgentStatus) and `stores/metrics.ts` (per-agent metric buffer)
+> - Composables: `useApi.ts` ($fetch wrapper to FastAPI base URL), `useWebSocketMetrics.ts` (WebSocket lifecycle with 500ms batch, auto-reconnect, message dispatch to stores)
+> - Backend URL configurable via `NUXT_PUBLIC_BACKEND_URL` env var (defaults to `http://localhost:8000`)
+> - WebSocket composable connects to `ws://<backendUrl>/ws/dashboard` expecting `metrics`, `agent_status`, `agent_update`, `replay_batch` message types per F16 spec
+> - No auth middleware — direct HTTP/WS calls to FastAPI without JWT headers for MVP
+> - Old `vllm-dashboard.html` preserved for chart layout reference
 > **Estimated Effort:** 4 days
 
 ## Description
