@@ -20,6 +20,18 @@ phase: Completion
 
 **Load `reference-coding-principles.md`** and run every check in the Principles Audit Checklist.
 
+If the task touched database models or Alembic migrations:
+
+7. **Migration check:** Verify the migration files exist in `alembic/versions/` and are properly generated:
+   - An `alembic/versions/` directory exists (if not, create it with an empty `.gitkeep`)
+   - An Alembic `env.py` exists (if not, run `alembic init alembic` or create manually)
+   - Migration revision files are present and named with timestamps
+   - Each migration has a unique `down_revision` and `revision` ID
+   - Migrations can be rolled forward and backward: `alembic upgrade head` + `alembic downgrade -1`
+8. **Currently-deployed migration check:** If the app is already deployed:
+   - Verify that `alembic upgrade head --sql` produces valid SQL
+   - Confirm migration order matches the dependency chain between model files
+
 ## Documentation
 
 If the task introduced new components, API endpoints, data models, services, or patterns — create or update docs in `{{DOCS_DIR}}`. For each item: purpose, API/props/parameters, usage example, integration notes, gotchas.
