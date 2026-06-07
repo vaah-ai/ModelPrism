@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** Critical
-> **Status:** ⚪ Not Started
+> **Status:** 🟢 Complete
 > **Estimated Effort:** 4 days
 
 > **Impact from M1-T4:** Agent WebSocket handler backend is at `/ws/agents/{agent_id}` (FastAPI WebSocket endpoint in `app/ws/agent_ws.py`). The agent must send typed messages: `heartbeat` (every 15s with `agents_running` list), `metrics` (every 2s with GPU + system data), `vllm_metrics` (per-instance), `command_progress`, and `command_result`. All message schemas are in `app/schemas/ws_messages.py`. The backend delivers queued commands on heartbeat, so the agent must handle receiving commands via WebSocket. Latest metrics are stored in Redis at `agent:{id}:latest_metrics`. Use `async with client.ws_connect(...)` to establish connection.
