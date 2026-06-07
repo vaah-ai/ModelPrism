@@ -39,7 +39,7 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto px-2 py-4">
+      <nav class="flex-1 overflow-y-auto px-3 py-4">
         <PanelMenu
           :model="navItems"
           class="border-none"
