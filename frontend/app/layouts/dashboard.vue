@@ -55,6 +55,18 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <Button
+            :icon="themeIcon"
+            text
+            rounded
+            severity="secondary"
+            :pt="{
+              root: { class: 'h-10 w-10' },
+            }"
+            :aria-label="themeLabel"
+            :v-tooltip="themeLabel"
+            @click="cycleTheme"
+          />
           <Tag value="MVP" severity="info" />
         </div>
       </header>
@@ -73,6 +85,12 @@ import { ref, computed } from 'vue'
 const appConfig = useAppConfig()
 const route = useRoute()
 const sidebarOpen = ref(false)
+
+const {
+  currentIcon: themeIcon,
+  currentLabel: themeLabel,
+  cycleTheme,
+} = useTheme()
 
 const pageTitle = computed(() => {
   const name = route.name as string || ''
