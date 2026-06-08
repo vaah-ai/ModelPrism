@@ -98,6 +98,20 @@
         </div>
       </div>
 
+      <!-- Empty metrics banner -->
+      <div
+        v-if="chartData.length === 0"
+        class="mb-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs"
+        :style="{
+          borderColor: 'rgba(6, 182, 212, 0.3)',
+          backgroundColor: 'rgba(6, 182, 212, 0.06)',
+          color: 'var(--text-accent)',
+        }"
+      >
+        <i class="pi pi-chart-bar text-xs" />
+        <span>Awaiting first metric data...</span>
+      </div>
+
       <!-- Metric Cards row -->
       <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
@@ -299,8 +313,11 @@ const vllmMetrics = computed<VllmMetrics>(() => {
 const runningModels = computed(() => {
   const a = currentAgent.value
   if (!a || !a.runningModels || a.runningModels === 0) return []
-  // For MVP, we show a placeholder model entry when models are running
-  return [{ name: `${a.runningModels} model(s) deployed`, status: 'running' }]
+  // For MVP, show generic entries — real model names require backend deployment API
+  return Array.from({ length: a.runningModels }, (_, i) => ({
+    name: `Model instance ${i + 1}`,
+    status: 'running' as const,
+  }))
 })
 
 // Severity colors for metric cards
@@ -367,7 +384,7 @@ onMounted(async () => {
         lastSeenAt: attr.last_seen_at,
         createdAt: attr.created_at,
       }
-      agentsStore.setAgents([agent])
+      agentsStore.upsertAgent(agent)
       loadingState.value = 'live'
     } else {
       loadingState.value = 'offline'

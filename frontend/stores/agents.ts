@@ -108,6 +108,13 @@ export const useAgentsStore = defineStore('agents', () => {
     }
   }
 
+  function upsertAgent(agent: Agent) {
+    agents.value.set(agent.id, agent)
+    agents.value = new Map(agents.value)
+    loading.value = false
+    error.value = null
+  }
+
   function applyMetricDelta(delta: MetricDelta) {
     const agent = agents.value.get(delta.agentId)
     if (!agent) return

@@ -76,47 +76,66 @@ const chartTitle = computed(() => {
 const resolvedTitle = computed(() => props.title ?? chartTitle.value)
 
 // Convert MetricPoint[] to uPlot columnar data
-function toColumnar(history: MetricPoint[]): [number[], number[]] {
+function toColumnar(history: MetricPoint[]): (number[])[] {
   const timestamps: number[] = []
-  const values: number[] = []
+  const values: number[][] = []
+
+  if (props.chartType === 'requests') {
+    values.push([]) // running
+    values.push([]) // waiting
+  } else {
+    values.push([]) // single series
+  }
 
   for (const pt of history) {
     timestamps.push(new Date(pt.ts).getTime() / 1000)
     switch (props.chartType) {
       case 'gpuUtil':
-        values.push(pt.gpuUtilAvgPct)
+        values[0].push(pt.gpuUtilAvgPct)
         break
       case 'vram':
-        values.push(pt.gpuMemoryUsedMb / 1024) // Convert MB to GB
+        values[0].push(pt.gpuMemoryUsedMb / 1024) // Convert MB to GB
         break
       case 'throughput':
-        values.push(pt.running) // throughput proxy
+        values[0].push(pt.tps ?? pt.running) // tps if available, fall back to running count
         break
       case 'requests':
-        // For multi-line, we handle via a single line for MVP
-        values.push(pt.running)
+        values[0].push(pt.running)
+        values[1].push(pt.waiting)
         break
     }
   }
 
-  return [timestamps, values]
+  return [timestamps, ...values]
 }
 
 function getChartOptions() {
   const color = accentColor.value
 
-  let series: any[] = [
+  const series: any[] = [
     {},
-    {
-      label: chartTitle.value,
-      stroke: color,
-      width: 2,
-    },
   ]
 
-  // Area fill for VRAM, line for others
-  if (props.chartType === 'vram') {
-    series[1].fill = `${color}33` // 20% opacity
+  if (props.chartType === 'requests') {
+    series.push({
+      label: 'Running',
+      stroke: 'var(--success)',
+      width: 2,
+    })
+    series.push({
+      label: 'Waiting',
+      stroke: 'var(--warning)',
+      width: 2,
+      fill: 'rgba(245, 158, 11, 0.1)',
+    })
+  } else {
+    const name = chartTitle.value
+    series.push({
+      label: name,
+      stroke: color,
+      width: 2,
+      ...(props.chartType === 'vram' ? { fill: `${color}33` } : {}),
+    })
   }
 
   return {
@@ -127,7 +146,7 @@ function getChartOptions() {
       drag: { x: false, y: false },
     },
     select: { show: false, left: 0, top: 0, width: 0, height: 0 },
-    legend: { show: false },
+    legend: { show: props.chartType === 'requests' },
     axes: [
       {
         stroke: 'var(--text-muted)',

@@ -57,6 +57,8 @@ export interface MetricPoint {
   cpuPct: number
   running: number
   waiting: number
+  /** Throughput in tokens per second */
+  tps?: number
 }
 
 /** Severity level for metric threshold coloring */

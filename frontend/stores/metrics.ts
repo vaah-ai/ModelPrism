@@ -1,15 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-export interface MetricPoint {
-  ts: string
-  gpuUtilAvgPct: number
-  gpuMemoryUsedMb: number
-  ramUsedGb: number
-  cpuPct: number
-  running: number
-  waiting: number
-}
+import type { MetricPoint } from '~~/app/types/dashboard'
 
 export interface MetricBuffer {
   agentId: string

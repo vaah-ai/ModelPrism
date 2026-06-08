@@ -81,7 +81,7 @@
           <div class="flex items-center justify-between">
             <span class="text-xs font-medium" style="color: var(--text-secondary)">Disk</span>
             <span class="text-xs font-mono" style="color: var(--text-secondary)">
-              {{ formatGb(metrics.diskUsedGb * 1024) }} / {{ formatGb(metrics.diskTotalGb * 1024) }} GB
+              {{ metrics.diskUsedGb.toFixed(1) }} / {{ metrics.diskTotalGb.toFixed(1) }} GB
             </span>
           </div>
           <ProgressBar
