@@ -31,7 +31,7 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto px-2 py-2">
+      <nav class="flex-1 overflow-y-auto px-4 py-2">
         <PanelMenu
           :model="navItems"
           class="border-none"
@@ -231,6 +231,10 @@ const panelMenuPt = {
   },
   rootList: {
     class: "list-none p-0 m-0",
+    style: {
+      paddingLeft: "0",
+      marginLeft: "0",
+    },
   },
   separator: {
     class: "my-1",
