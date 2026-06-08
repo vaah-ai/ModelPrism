@@ -141,6 +141,27 @@ code, pre, .font-mono, kbd {
   margin-top: 0 !important;
 }
 
+/* DataTable striped rows in dark mode */
+.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+  background: var(--bg-elevated) !important;
+}
+
+/* DataTable empty message row — match table background */
+tr.p-datatable-empty-message td {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* DataTable hover row — subtle highlight */
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--bg-hover) !important;
+}
+
+/* Paginator spacing — compact */
+.p-paginator {
+  border-top: 1px solid var(--border-color) !important;
+}
+
 /* Header bar */
 .header-base {
   background-color: var(--bg-surface);

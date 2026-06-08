@@ -24,8 +24,7 @@
           >
             <i
               :class="`pi ${stat.icon}`"
-              class="text-accent"
-              style="font-size: 1.1rem"
+              :style="{ color: stat.iconColor, fontSize: '1.1rem' }"
             />
           </div>
         </div>
@@ -49,6 +48,7 @@
 
       <template #content>
         <DataTable
+          v-if="agentList.length > 0 || loading"
           :value="agentList"
           :loading="loading"
           paginator
@@ -76,9 +76,9 @@
               </div>
             </template>
           </Column>
-          <Column header="GPU" sortable :sort-field="'gpuModel'" class="text-sm">
+          <Column header="GPU" sortable :sort-field="'gpuModel'">
             <template #body="{ data }">
-              <span class="text-sm" style="color: var(--text-secondary)">
+              <span class="text-xs" style="color: var(--text-secondary)">
                 {{ data.gpuCount }}× {{ data.gpuModel }}
               </span>
             </template>
@@ -132,11 +132,7 @@
               </div>
             </template>
           </Column>
-          <Column
-            header="Running"
-            sortable
-            :sort-field="'runningModels'"
-          >
+          <Column header="Running" sortable :sort-field="'runningModels'">
             <template #body="{ data }">
               <Tag
                 :value="data.runningModels ?? 0"
@@ -159,27 +155,24 @@
                 severity="secondary"
                 text
                 rounded
-                :pt="{ root: { class: 'h-8 w-8' } }"
+                :pt="{ root: { class: 'h-7 w-7' } }"
               />
             </template>
           </Column>
         </DataTable>
 
-        <!-- Empty State -->
+        <!-- Empty State (only when no data and not loading) -->
         <div
           v-if="!loading && agentList.length === 0"
-          class="py-12 text-center"
+          class="flex flex-col items-center justify-center py-16"
         >
           <div
-            class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
+            class="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
             style="background-color: var(--accent-subtle); border: 1px solid var(--accent-light);"
           >
-            <i class="pi pi-server text-accent" style="font-size: 1.25rem" />
+            <i class="pi pi-server" style="color: var(--text-accent); font-size: 1.25rem" />
           </div>
-          <h3
-            class="mb-1 text-base font-semibold"
-            style="color: var(--text-primary)"
-          >
+          <h3 class="mb-1 text-base font-semibold" style="color: var(--text-primary)">
             No GPU Servers Yet
           </h3>
           <p class="mb-4 text-xs" style="color: var(--text-secondary)">
@@ -297,24 +290,28 @@ const summaryStats = computed(() => [
     value: agentList.value.length,
     icon: "pi pi-server",
     color: "text-primary",
+    iconColor: "var(--text-accent)",
   },
   {
     label: "Online",
     value: agentList.value.filter((a) => a.status === "online").length,
     icon: "pi pi-check-circle",
-    color: "text-green-600",
+    color: "text-severity-success",
+    iconColor: "var(--success)",
   },
   {
     label: "Offline",
     value: agentList.value.filter((a) => a.status === "offline").length,
     icon: "pi pi-times-circle",
-    color: "text-surface-400",
+    color: "text-secondary",
+    iconColor: "var(--text-secondary)",
   },
   {
     label: "Degraded",
     value: agentList.value.filter((a) => a.status === "degraded").length,
     icon: "pi pi-exclamation-triangle",
-    color: "text-orange-500",
+    color: "text-severity-warning",
+    iconColor: "var(--warning)",
   },
 ]);
 
