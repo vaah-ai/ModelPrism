@@ -312,12 +312,8 @@ const vllmMetrics = computed<VllmMetrics>(() => {
 // Running models (from agent data)
 const runningModels = computed(() => {
   const a = currentAgent.value
-  if (!a || !a.runningModels || a.runningModels === 0) return []
-  // For MVP, show generic entries — real model names require backend deployment API
-  return Array.from({ length: a.runningModels }, (_, i) => ({
-    name: `Model instance ${i + 1}`,
-    status: 'running' as const,
-  }))
+  // No model list available from backend yet — this will be populated by deployment API (M2+)
+  return []
 })
 
 // Severity colors for metric cards

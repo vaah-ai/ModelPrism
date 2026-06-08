@@ -97,7 +97,7 @@ function toColumnar(history: MetricPoint[]): (number[])[] {
         values[0].push(pt.gpuMemoryUsedMb / 1024) // Convert MB to GB
         break
       case 'throughput':
-        values[0].push(pt.tps ?? pt.running) // tps if available, fall back to running count
+        values[0].push(pt.tps ?? 0) // tps from backend, or 0 until data arrives
         break
       case 'requests':
         values[0].push(pt.running)
