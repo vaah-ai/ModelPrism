@@ -186,7 +186,7 @@
     <Dialog
       v-model:visible="showAddDialog"
       :modal="true"
-      class="w-full max-w-xl"
+      class="w-full max-w-2xl"
       :pt="{
         root: {
           class: 'border shadow-2xl',
@@ -245,8 +245,8 @@
                 </div>
                 <!-- Code area -->
                 <div class="relative">
-                  <pre class="m-0 overflow-x-auto px-3 py-2.5 font-mono text-xs leading-relaxed" style="color: #e4e4e7;">$ <span style="color: #22d3ee;">curl</span> <span style="color: #818cf8;">-fsSL</span> <span style="color: #a1a1aa;">https://github.com/modelprism/agent/install.sh</span> <span style="color: #71717a;">| \</span>
-  <span style="color: #22d3ee;">bash</span> <span style="color: #818cf8;">-s --</span> <span style="color: #f59e0b;">--server</span> <span style="color: #a1a1aa;">{{ backendUrl }}</span> <span style="color: #f59e0b;">--token</span> <span style="color: #c084fc;">&lt;your-token&gt;</span></pre>
+                  <pre class="m-0 whitespace-pre-wrap break-all px-3 py-2.5 font-mono text-xs leading-relaxed" style="color: #e4e4e7;">$ <span style="color: #22d3ee;">curl</span> <span style="color: #818cf8;">-fsSL</span> <span style="color: #a1a1aa;">https://github.com/modelprism/agent/install.sh</span> <span style="color: #71717a;">| \</span>
+  <span style="color: #22d3ee;">bash</span> <span style="color: #818cf8;">-s -</span><span style="color: #818cf8;">-</span> <span style="color: #f59e0b;">--server</span> <span style="color: #a1a1aa;">{{ backendUrl }}</span> <span style="color: #f59e0b;">--token</span> <span style="color: #c084fc;">&lt;your-token&gt;</span></pre>
                   <Button
                     icon="pi pi-copy"
                     severity="secondary"
