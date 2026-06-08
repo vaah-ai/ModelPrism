@@ -41,6 +41,7 @@ from app.services.agent_manager import agent_registry
 from app.services.downsampler import run_downsampler
 from app.services.metric_service import metric_service, run_flush_loop
 from app.ws.agent_ws import router as agent_ws_router
+from app.ws.dashboard_ws import router as dashboard_ws_router
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +208,7 @@ app.include_router(api_router, prefix="/api")
 
 # --- WebSocket Routes ---
 app.include_router(agent_ws_router)
+app.include_router(dashboard_ws_router)
 
 # --- Health Check ---
 

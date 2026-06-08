@@ -220,7 +220,29 @@ Backend should respond to keep connection alive. Backend can force agent to reco
 | Path | Description |
 |------|-------------|
 | /ws/dashboard/{agent_id} | Real-time metrics stream for a specific GPU server |
-| /ws/dashboard | Aggregate metrics for all user's agents |
+| /ws/dashboard | Aggregate metrics for all agents |
+
+**Dashboard WS message format** (backend → browser):
+
+```json
+{
+  "type": "metrics",
+  "agent_id": "ag_xyz789",
+  "ts": "2026-06-07T14:30:02.000+00:00",
+  "gpu_util_avg_pct": 87,
+  "gpu_memory_used_mb": 42100,
+  "ram_used_gb": 128,
+  "cpu_pct": 12.5
+}
+```
+
+**Client → backend messages:**
+| Type | Purpose |
+|------|---------|
+| `{"type": "ping"}` | Keepalive — backend responds with `{"type": "pong"}` |
+| `{"type": "replay_request", "since": "..."}` | Request missed messages on reconnect — backend responds with `{"type": "replay_batch", "entries": [], "count": 0}` (MVP stub) |
+
+**Note:** Metrics are published by agents via the agent WebSocket every 2s. The dashboard WebSocket handler subscribes to Redis pub/sub channels (`metrics:{agent_id}`) and forwards transformed (averaged) snapshots to connected browser clients. No auth for MVP. No buffering or filtering on the backend — the 500ms batching is client-side only.
 
 ### Historical Metrics
 
