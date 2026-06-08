@@ -9,6 +9,17 @@ Endpoints
 ---------
 - ``/ws/dashboard/{agent_id}`` — real-time metrics for a specific GPU server
 - ``/ws/dashboard`` — aggregate metrics for all registered agents
+
+Data flow
+---------
+::
+
+    agent_ws.py (publishes) → Redis pub/sub → dashboard_ws.py (subscribes)
+                                                ├── _transform_metrics()
+                                                ├── _transform_vllm_metrics()
+                                                └── _route_channel_message()
+                                                → DashboardMetricsMessage (typed schema)
+                                                → browser client
 """
 
 from __future__ import annotations
@@ -16,13 +27,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.redis import redis_client
+from app.schemas.dashboard_ws import DashboardMetricsMessage
 from app.utils.metric_helpers import avg_gpu_field
 
 logger = logging.getLogger(__name__)
@@ -39,128 +50,80 @@ _VLLM_METRICS_CHANNEL = "vllm_metrics:{id}"
 def _transform_metrics(
     raw: dict[str, Any],
     agent_id: str,
-) -> dict[str, Any] | None:
-    """Transform a raw agent metric snapshot into the dashboard format.
+) -> DashboardMetricsMessage | None:
+    """Transform a raw agent metric snapshot into a ``DashboardMetricsMessage``.
 
     The agent WebSocket handler publishes the raw, nested format
     (``gpu: [{util_pct, mem_used_mb, ...}]``).  This function computes
     GPU-level averages and flattens the payload for the dashboard
     composable (``useWebSocketMetrics.ts``).
-
-    Parameters
-    ----------
-    raw:
-        The raw metric payload as published to Redis.
-    agent_id:
-        The agent identifier to inject into the forwarded message.
-
-    Returns
-    -------
-    The transformed payload, or ``None`` if the payload cannot be parsed.
     """
     ts_raw = raw.get("ts")
     if ts_raw is None:
         return None
-
-    # Convert Unix timestamp to ISO 8601
-    if isinstance(ts_raw, (int, float)):
-        ts_iso = datetime.fromtimestamp(ts_raw, tz=UTC).isoformat()
-    else:
-        ts_iso = str(ts_raw)
 
     gpus = raw.get("gpu", [])
     avg_util_pct = avg_gpu_field(gpus, "util_pct")
     avg_mem_used = avg_gpu_field(gpus, "mem_used_mb")
 
-    return {
-        "type": "metrics",
-        "agent_id": agent_id,
-        "ts": ts_iso,
-        "gpu_util_avg_pct": avg_util_pct,
-        "gpu_memory_used_mb": avg_mem_used,
-        "gpu_cache_pct": raw.get("gpu_cache_pct"),
-        "ram_used_gb": raw.get("ram_used_gb"),
-        "ram_total_gb": raw.get("ram_total_gb"),
-        "cpu_pct": raw.get("cpu_pct"),
-        "load_1": raw.get("load_1"),
-        "load_5": raw.get("load_5"),
-        "load_15": raw.get("load_15"),
-        "disk_used_gb": raw.get("disk_used_gb"),
-        "disk_total_gb": raw.get("disk_total_gb"),
-        "disk_pct": raw.get("disk_pct"),
-        # The system metrics snapshot does not carry running_models;
-        # that field is populated by vLLM metrics transform instead.
-        "running_models": None,
-        "running": None,
-        "waiting": None,
-    }
+    return DashboardMetricsMessage(
+        agent_id=agent_id,
+        ts_raw=ts_raw,
+        gpu_util_avg_pct=avg_util_pct,
+        gpu_memory_used_mb=avg_mem_used,
+        gpu_cache_pct=raw.get("gpu_cache_pct"),
+        ram_used_gb=raw.get("ram_used_gb"),
+        ram_total_gb=raw.get("ram_total_gb"),
+        cpu_pct=raw.get("cpu_pct"),
+        load_1=raw.get("load_1"),
+        load_5=raw.get("load_5"),
+        load_15=raw.get("load_15"),
+        disk_used_gb=raw.get("disk_used_gb"),
+        disk_total_gb=raw.get("disk_total_gb"),
+        disk_pct=raw.get("disk_pct"),
+        # System metrics do not carry running/waiting — those come
+        # from vLLM metrics via _transform_vllm_metrics.
+    )
 
 
 def _transform_vllm_metrics(
     raw: dict[str, Any],
     agent_id: str,
-) -> dict[str, Any] | None:
-    """Transform a raw vLLM metric entry into the dashboard format.
+) -> DashboardMetricsMessage | None:
+    """Transform a raw vLLM metric entry into a ``DashboardMetricsMessage``.
 
     vLLM metrics carry per-instance LLM telemetry (request counts,
     throughput, TTFT).  The frontend uses ``running`` / ``waiting``
     for request queue charts and ``running_models`` to indicate
     that at least one model is deployed.
-
-    Parameters
-    ----------
-    raw:
-        The raw vLLM metric payload as published to Redis.
-    agent_id:
-        The agent identifier to inject into the forwarded message.
-
-    Returns
-    -------
-    The transformed payload, or ``None`` if the payload cannot be parsed.
     """
     ts_raw = raw.get("ts")
     if ts_raw is None:
         return None
 
-    if isinstance(ts_raw, (int, float)):
-        ts_iso = datetime.fromtimestamp(ts_raw, tz=UTC).isoformat()
-    else:
-        ts_iso = str(ts_raw)
-
     model_name = raw.get("model_name")
-    return {
-        "type": "metrics",
-        "agent_id": agent_id,
-        "ts": ts_iso,
-        "gpu_util_avg_pct": raw.get("gpu_cache_pct"),
-        "gpu_memory_used_mb": None,
-        "gpu_cache_pct": raw.get("gpu_cache_pct"),
-        "ram_used_gb": None,
-        "ram_total_gb": None,
-        "cpu_pct": None,
-        "load_1": None,
-        "load_5": None,
-        "load_15": None,
-        "disk_used_gb": None,
-        "disk_total_gb": None,
-        "disk_pct": None,
-        # vLLM-specific fields
-        "running_models": 1 if model_name else 0,
-        "running": raw.get("running"),
-        "waiting": raw.get("waiting"),
-    }
+
+    return DashboardMetricsMessage(
+        agent_id=agent_id,
+        ts_raw=ts_raw,
+        gpu_util_avg_pct=raw.get("gpu_cache_pct"),
+        gpu_cache_pct=raw.get("gpu_cache_pct"),
+        running_models=1 if model_name else 0,
+        running=raw.get("running"),
+        waiting=raw.get("waiting"),
+    )
 
 
 def _route_channel_message(
     channel: str,
     data: str,
     agent_id: str,
-) -> dict[str, Any] | None:
-    """Parse and transform a message from any subscribed Redis channel.
+) -> DashboardMetricsMessage | None:
+    """Parse a Redis channel message and dispatch to the correct transform.
 
     Inspects the channel prefix to determine whether the payload is a
-    system metrics snapshot or a vLLM metrics entry and routes to the
-    appropriate transform function.
+    system metrics snapshot (``metrics:{id}``) or a vLLM metrics entry
+    (``vllm_metrics:{id}``).
     """
     try:
         payload = json.loads(data)
@@ -212,7 +175,7 @@ async def _forward_pubsub_messages(
         transformed = _route_channel_message(msg_channel, raw_data, agent_id)
         if transformed is not None:
             try:
-                await websocket.send_json(transformed)
+                await websocket.send_json(transformed.to_dict())
             except Exception:
                 break  # Connection likely closed
 
@@ -245,8 +208,8 @@ async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
     """Real-time metrics for a specific GPU server.
 
     Subscribes to ``metrics:{agent_id}`` and ``vllm_metrics:{agent_id}``
-    Redis channels and forwards transformed metric snapshots to the
-    dashboard client.
+    Redis channels and forwards ``DashboardMetricsMessage`` payloads to
+    the dashboard client.
     """
     await websocket.accept()
     logger.info("Dashboard WS connected for agent %s", agent_id)
@@ -271,7 +234,6 @@ async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
         async def redis_reader() -> None:
             """Read from Redis pub/sub and forward transformed metrics."""
             if pubsub is None:
-                # Sleep forever so the other task (client_reader) stays alive
                 await asyncio.get_running_loop().create_future()
                 return
 
@@ -306,8 +268,8 @@ async def dashboard_ws_all(websocket: WebSocket) -> None:
     """Aggregate metrics for all registered agents.
 
     Uses Redis ``PSUBSCRIBE`` to listen on ``metrics:*`` and
-    ``vllm_metrics:*`` patterns and forwards transformed snapshots
-    for *every* agent to the connected dashboard client.
+    ``vllm_metrics:*`` patterns and forwards ``DashboardMetricsMessage``
+    payloads for *every* agent to the connected dashboard client.
     """
     await websocket.accept()
     logger.info("Dashboard WS connected (all agents)")
