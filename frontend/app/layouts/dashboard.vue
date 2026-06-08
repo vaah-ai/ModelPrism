@@ -4,46 +4,49 @@
     <Transition name="sidebar">
       <div
         v-if="sidebarOpen"
-        class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+        class="fixed inset-0 z-[60] bg-black/60 lg:hidden"
         @click="sidebarOpen = false"
       />
     </Transition>
 
     <!-- Sidebar -->
     <aside
-      class="sidebar-base fixed inset-y-0 left-0 z-50 flex w-64 flex-col shadow-lg transition-transform duration-300 lg:static lg:translate-x-0"
-      :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+      class="sidebar-base fixed inset-y-0 left-0 z-50 flex w-64 flex-col transition-transform duration-300 lg:static lg:translate-x-0"
+      :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:!translate-x-0'"
     >
       <!-- Brand -->
       <div
-        class="flex h-16 items-center justify-between border-b px-6"
+        class="flex h-14 shrink-0 items-center gap-3 border-b px-4"
         style="border-color: var(--border-color)"
       >
-        <NuxtLink to="/dashboard" class="flex items-center gap-2">
-          <span class="text-xl font-bold" style="color: var(--accent)"
+        <NuxtLink to="/dashboard" class="flex items-center gap-2.5">
+          <span
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
+            style="background-color: var(--accent); color: #fff"
+          >MP</span>
+          <span class="text-sm font-bold tracking-tight" style="color: var(--text-primary)"
             >ModelPrism</span
           >
         </NuxtLink>
-        <button
-          class="flex h-8 w-8 items-center justify-center rounded-lg lg:hidden"
-          style="color: var(--text-muted)"
-          @click="sidebarOpen = false"
-        >
-          <i class="pi pi-times" />
-        </button>
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto p-3">
-        <PanelMenu :model="navItems" class="border-none" />
+      <nav class="flex-1 overflow-y-auto px-4 py-2">
+        <PanelMenu
+          :model="navItems"
+          class="border-none"
+          :pt="panelMenuPt"
+        />
       </nav>
 
-      <!-- Footer -->
+      <!-- Bottom section -->
       <div
-        class="border-t p-4 text-center text-xs"
-        style="border-color: var(--border-color); color: var(--text-muted)"
+        class="flex shrink-0 items-center justify-center border-t px-4 py-3"
+        style="border-color: var(--border-color)"
       >
-        ModelPrism v{{ appConfig.version }}
+        <span class="text-xs" style="color: var(--text-muted)">
+          v{{ appConfig.version }}
+        </span>
       </div>
     </aside>
 
@@ -51,17 +54,19 @@
     <div class="flex flex-1 flex-col lg:pl-0">
       <!-- Top bar -->
       <header
-        class="header-base flex h-16 items-center justify-between px-4 lg:px-6"
+        class="header-base flex h-14 items-center justify-between px-4 lg:px-6"
       >
-        <div class="flex items-center gap-3">
-          <button
-            class="flex h-10 w-10 items-center justify-center rounded-lg"
-            style="color: var(--text-secondary)"
+        <div class="flex items-center gap-2">
+          <Button
+            icon="pi pi-bars"
+            text
+            rounded
+            severity="secondary"
+            :pt="{ root: { class: 'h-9 w-9' } }"
+            :aria-label="'Toggle sidebar'"
             @click="sidebarOpen = !sidebarOpen"
-          >
-            <i class="pi pi-bars text-xl" />
-          </button>
-          <h2 class="text-lg font-semibold" style="color: var(--text-primary)">
+          />
+          <h2 class="text-base font-semibold" style="color: var(--text-primary)">
             {{ pageTitle }}
           </h2>
         </div>
@@ -72,11 +77,9 @@
             text
             rounded
             severity="secondary"
-            :pt="{
-              root: { class: 'h-10 w-10' },
-            }"
+            :pt="{ root: { class: 'h-9 w-9' } }"
             :aria-label="themeLabel"
-            :v-tooltip="themeLabel"
+            v-tooltip="themeLabel"
             @click="cycleTheme"
           />
           <Tag value="MVP" severity="info" />
@@ -84,7 +87,7 @@
       </header>
 
       <!-- Page content -->
-      <main class="flex-1 overflow-auto p-6">
+      <main class="flex-1 overflow-auto p-4 lg:p-5">
         <slot />
       </main>
     </div>
@@ -102,7 +105,7 @@ const {
   currentIcon: themeIcon,
   currentLabel: themeLabel,
   cycleTheme,
-} = useTheme()
+} = useTheme();
 
 const pageTitle = computed(() => {
   const name = (route.name as string) || "";
@@ -184,6 +187,60 @@ const navItems = ref<NavItem[]>([
     to: "/dashboard/admin",
   },
 ]);
+
+const panelMenuPt = {
+  root: {
+    class: "border-none bg-transparent",
+  },
+  panel: {
+    class: "border-none",
+  },
+  submenu: {
+    class: "border-none pl-1",
+  },
+  header: {
+    class: "",
+  },
+  headerLink: ({ context }: { context: { active: boolean } }) => ({
+    class: [
+      "flex items-center px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none sidebar-nav-link",
+    ],
+    style: {
+      color: context.active ? "var(--text-accent)" : "",
+      backgroundColor: context.active ? "var(--bg-active)" : "transparent",
+    },
+  }),
+  headerIcon: {
+    class: "text-base w-5 shrink-0",
+  },
+  headerLabel: {
+    class: "text-sm",
+  },
+  submenuIcon: {
+    class: "ml-auto text-xs transition-transform duration-200 order-last",
+  },
+  rootList: {
+    class: "list-none p-0 m-0",
+    style: {
+      paddingLeft: "0",
+      marginLeft: "0",
+    },
+  },
+  separator: {
+    class: "my-1",
+    style: {
+      borderTop: "1px solid var(--border-color)",
+    },
+  },
+  transition: {
+    enterFromClass: "max-h-0 overflow-hidden opacity-0",
+    enterActiveClass: "overflow-hidden transition-all duration-200 ease-out",
+    enterToClass: "max-h-96 opacity-100",
+    leaveFromClass: "max-h-96 opacity-100",
+    leaveActiveClass: "overflow-hidden transition-all duration-150 ease-in",
+    leaveToClass: "max-h-0 overflow-hidden opacity-0",
+  },
+};
 </script>
 
 <style scoped>
@@ -194,5 +251,11 @@ const navItems = ref<NavItem[]>([
 .sidebar-enter-from,
 .sidebar-leave-to {
   opacity: 0;
+}
+
+/* Sidebar nav link hover — replaces inline JS handlers */
+.sidebar-nav-link:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
 }
 </style>
