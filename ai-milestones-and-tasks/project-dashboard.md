@@ -22,18 +22,18 @@
 | M1-T6 | Metric Storage + API | 🟢 Complete | High | 3 days | M1-T1, M1-T2, M1-T4 |
 | M1-T7 | Dashboard WS Broadcast | 🟢 Complete | High | 2 days | M1-T4, M1-T6 |
 | M1-T8 | Nuxt Dashboard Scaffold | 🟢 Complete | Critical | 2 days | None |
-| M1-T9 | Dashboard Pages | ⚪ Not Started | High | 6 days | M1-T7, M1-T8 |
+| M1-T9 | Dashboard Pages | 🟢 Complete | High | 6 days | M1-T7, M1-T8 |
 
 #### M1-T9 Sub-Tasks
 
 | ID | Title | Status | Effort | Dependencies | Priority |
 |----|-------|--------|--------|--------------|----------|
-| M1-T9-01 | Shared Types, Utils & Common Components (MetricCard, StatusBadge, GpuBar) | ⚪ Not Started | 0.5d | None | Critical |
-| M1-T9-02 | Dashboard Components (SystemResources, QueueDiagnostics, ModelList) | ⚪ Not Started | 1d | M1-T9-01 | High |
-| M1-T9-03 | uPlot Real-Time Charts (GpuMetricsChart) | ⚪ Not Started | 1.5d | M1-T9-01 | High |
-| M1-T9-04 | Live Log Viewer (LiveLog) | ⚪ Not Started | 1d | M1-T9-01 | Medium |
-| M1-T9-05 | Store Wiring + Overview Page | ⚪ Not Started | 1d | M1-T9-01, M1-T9-02 | High |
-| M1-T9-06 | Detail Page Assembly | ⚪ Not Started | 1d | M1-T9-01 through M1-T9-05 | High |
+| M1-T9-01 | Shared Types, Utils & Common Components (MetricCard, StatusBadge, GpuBar) | 🟢 Complete | 0.5d | None | Critical |
+| M1-T9-02 | Dashboard Components (SystemResources, QueueDiagnostics, ModelList) | 🟢 Complete | 1d | M1-T9-01 | High |
+| M1-T9-03 | uPlot Real-Time Charts (GpuMetricsChart) | 🟢 Complete | 1.5d | M1-T9-01 | High |
+| M1-T9-04 | Live Log Viewer (LiveLog) | 🟢 Complete | 1d | M1-T9-01 | Medium |
+| M1-T9-05 | Store Wiring + Overview Page | 🟢 Complete | 1d | M1-T9-01, M1-T9-02 | High |
+| M1-T9-06 | Detail Page Assembly | 🟢 Complete | 1d | M1-T9-01 through M1-T9-05 | High |
 
 ## Backlog
 

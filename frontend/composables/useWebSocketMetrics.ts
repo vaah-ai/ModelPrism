@@ -1,6 +1,6 @@
 import { ref, onUnmounted, type Ref } from 'vue'
-import { useAgentsStore, type MetricDelta } from '~/stores/agents'
-import { useMetricsStore, type MetricPoint } from '~/stores/metrics'
+import { useAgentsStore, type MetricDelta } from '~~/stores/agents'
+import { useMetricsStore, type MetricPoint } from '~~/stores/metrics'
 
 export type WsConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
 

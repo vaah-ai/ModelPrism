@@ -202,6 +202,11 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
 
+  components: [
+    { path: '~/components/common', prefix: '' },
+    { path: '~/components/dashboard', prefix: '' },
+  ],
+
   modules: [
     '@primevue/nuxt-module',
     '@pinia/nuxt',

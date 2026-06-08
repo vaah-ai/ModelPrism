@@ -1,41 +1,54 @@
 <template>
   <div>
+    <!-- WebSocket Connection Indicator -->
+    <div
+      v-if="wsConnectionState !== 'connected' && wsConnectionState !== 'disconnected'"
+      class="mb-3 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs"
+      :style="{
+        borderColor: 'rgba(245, 158, 11, 0.3)',
+        backgroundColor: 'rgba(245, 158, 11, 0.06)',
+        color: 'var(--warning)',
+      }"
+    >
+      <i class="pi pi-sync animate-spin text-xs" />
+      <span>
+        {{ wsConnectionState === 'reconnecting' ? 'Reconnecting to live updates...' : 'Connecting to live updates...' }}
+      </span>
+    </div>
+
     <!-- Summary Header Cards -->
     <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div
-        v-for="stat in summaryStats"
-        :key="stat.label"
-        class="card-base hover-glow cursor-pointer p-4"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <span
-              class="text-xs font-medium"
-              style="color: var(--text-secondary)"
-              >{{ stat.label }}</span
-            >
-            <div class="mt-0.5 text-xl font-bold" :class="stat.color">
-              {{ stat.value }}
-            </div>
-          </div>
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg"
-            style="background-color: var(--accent-subtle)"
-          >
-            <i
-              :class="`pi ${stat.icon}`"
-              :style="{ color: stat.iconColor, fontSize: '1.1rem' }"
-            />
-          </div>
-        </div>
-      </div>
+      <MetricCard
+        label="Total Servers"
+        :value="agentsStore.meta.total"
+        :severity="'info'"
+        trend="stable"
+      />
+      <MetricCard
+        label="Online"
+        :value="agentsStore.onlineAgents.length"
+        :severity="'success'"
+        trend="stable"
+      />
+      <MetricCard
+        label="Offline"
+        :value="agentsStore.offlineAgents.length"
+        :severity="'secondary'"
+        trend="stable"
+      />
+      <MetricCard
+        label="Degraded"
+        :value="agentsStore.degradedAgents.length"
+        :severity="'warn'"
+        trend="stable"
+      />
     </div>
 
     <!-- Server List -->
     <Card :pt="{ title: { class: 'px-5 pt-4 pb-0' } }">
       <template #title>
         <div class="flex items-center justify-between">
-          <span class="text-sm font-semibold" style="color: var(--text-primary)">GPU Servers</span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">GPU Servers</span>
           <Button
             label="Add Server"
             icon="pi pi-plus"
@@ -48,9 +61,9 @@
 
       <template #content>
         <DataTable
-          v-if="agentList.length > 0 || loading"
-          :value="agentList"
-          :loading="loading"
+          v-if="agentsStore.agentList.length > 0 || agentsStore.loading"
+          :value="agentsStore.agentList"
+          :loading="agentsStore.loading"
           paginator
           :rows="25"
           :rows-per-page-options="[10, 25, 50]"
@@ -65,14 +78,8 @@
           <Column field="name" header="Name" sortable>
             <template #body="{ data }">
               <div class="flex items-center gap-1.5">
-                <Tag
-                  :value="data.status"
-                  :severity="getStatusSeverity(data.status)"
-                  class="text-xs"
-                />
-                <span class="text-sm font-medium" style="color: var(--text-primary)">{{
-                  data.name
-                }}</span>
+                <StatusBadge :status="data.status" />
+                <span class="text-sm font-medium" style="color: var(--text-primary)">{{ data.name }}</span>
               </div>
             </template>
           </Column>
@@ -100,9 +107,9 @@
                   }"
                   style="width: 64px"
                 />
-                <span class="text-xs" style="color: var(--text-secondary)"
-                  >{{ Math.round(data.gpuUtilAvgPct ?? 0) }}%</span
-                >
+                <span class="text-xs" style="color: var(--text-secondary)">
+                  {{ Math.round(data.gpuUtilAvgPct ?? 0) }}%
+                </span>
               </div>
             </template>
           </Column>
@@ -120,7 +127,7 @@
                       },
                     },
                     value: {
-                      style: { background: getVramColor(getVramPct(data)) },
+                      style: { background: utilsGetVramColor(getVramPct(data)) },
                     },
                   }"
                   style="width: 64px"
@@ -161,21 +168,21 @@
           </Column>
         </DataTable>
 
-        <!-- Empty State (only when no data and not loading) -->
+        <!-- Empty State -->
         <div
-          v-if="!loading && agentList.length === 0"
+          v-if="!agentsStore.loading && agentsStore.agentList.length === 0"
           class="flex flex-col items-center justify-center py-16"
         >
           <div
             class="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
             style="background-color: var(--accent-subtle); border: 1px solid var(--accent-light);"
           >
-            <i class="pi pi-server" style="color: var(--text-accent); font-size: 1.25rem" />
+            <i class="pi pi-server" style="color: var(--text-accent); font-size: 1.25rem;" />
           </div>
-          <h3 class="mb-1 text-base font-semibold" style="color: var(--text-primary)">
+          <h3 class="mb-1 text-base font-semibold" style="color: var(--text-primary);">
             No GPU Servers Yet
           </h3>
-          <p class="mb-4 text-xs" style="color: var(--text-secondary)">
+          <p class="mb-4 text-xs" style="color: var(--text-secondary);">
             Add your first server to get started.
           </p>
         </div>
@@ -203,19 +210,17 @@
             class="flex h-9 w-9 items-center justify-center rounded-lg"
             style="background: linear-gradient(135deg, var(--accent), #0e7490);"
           >
-            <i class="pi pi-server" style="color: #fff; font-size: 1rem" />
+            <i class="pi pi-server" style="color: #fff; font-size: 1rem;" />
           </span>
           <div>
-            <span class="text-sm font-semibold" style="color: var(--text-primary)">Add GPU Server</span>
-            <p class="text-xs" style="color: var(--text-muted)">Connect a new inference node</p>
+            <span class="text-sm font-semibold" style="color: var(--text-primary);">Add GPU Server</span>
+            <p class="text-xs" style="color: var(--text-muted);">Connect a new inference node</p>
           </div>
         </div>
       </template>
 
       <div class="space-y-0">
-        <!-- Step connector line -->
         <div class="relative pl-10">
-          <!-- Vertical connector -->
           <div class="absolute left-[15px] top-2 h-[calc(100%+1rem)] w-px" style="background: linear-gradient(to bottom, var(--accent), var(--border-color));" />
 
           <!-- Step 1: Install -->
@@ -224,19 +229,16 @@
               class="absolute -left-[7px] top-0 z-10 flex h-[15px] w-[15px] items-center justify-center rounded-full"
               style="background-color: var(--accent);"
             >
-              <span class="text-[9px] font-bold" style="color: #fff">1</span>
+              <span class="text-[9px] font-bold" style="color: #fff;">1</span>
             </div>
             <div class="rounded-xl border p-4 transition-colors" style="border-color: var(--border-color); background-color: var(--bg-surface);">
               <div class="mb-3">
-                <h4 class="text-sm font-semibold" style="color: var(--text-primary)">Install the Agent</h4>
+                <h4 class="text-sm font-semibold" style="color: var(--text-primary);">Install the Agent</h4>
                 <p class="text-xs leading-relaxed" style="color: var(--text-muted); margin-top: 1px;">
                   Run this one-liner on your GPU server. The agent auto-registers with ModelPrism.
                 </p>
               </div>
-
-              <!-- Terminal emulator -->
               <div class="overflow-hidden rounded-lg border" style="border-color: var(--border-color); background-color: #050505;">
-                <!-- Title bar with copy button -->
                 <div class="flex items-center gap-1.5 border-b px-3 py-1.5" style="border-color: var(--border-color); background-color: #0a0a0b;">
                   <span class="h-2.5 w-2.5 rounded-full" style="background-color: #ef4444;" />
                   <span class="h-2.5 w-2.5 rounded-full" style="background-color: #f59e0b;" />
@@ -254,7 +256,6 @@
                     />
                   </div>
                 </div>
-                <!-- Code area -->
                 <div class="px-3 py-2.5 font-mono text-xs leading-relaxed" style="color: #e4e4e7;">
                   <pre class="m-0 whitespace-pre-wrap break-all">$ <span style="color: #22d3ee;">curl</span> <span style="color: #818cf8;">-fsSL</span> <span style="color: #a1a1aa;">https://github.com/modelprism/agent/install.sh</span> <span style="color: #71717a;">| \</span>
   <span style="color: #22d3ee;">bash</span> <span style="color: #818cf8;">-s -</span><span style="color: #818cf8;">-</span> <span style="color: #f59e0b;">--server</span> <span style="color: #a1a1aa;">{{ backendUrl }}</span> <span style="color: #f59e0b;">--token</span> <span style="color: #c084fc;">&lt;your-token&gt;</span></pre>
@@ -269,34 +270,33 @@
               class="absolute -left-[7px] top-0 z-10 flex h-[15px] w-[15px] items-center justify-center rounded-full"
               style="background-color: var(--text-muted);"
             >
-              <span class="text-[9px] font-bold" style="color: var(--bg-page)">2</span>
+              <span class="text-[9px] font-bold" style="color: var(--bg-page);">2</span>
             </div>
             <div
               class="rounded-xl border p-4 transition-colors"
               style="border-color: var(--border-color); background-color: var(--bg-surface); opacity: 0.55;"
             >
               <div class="flex items-center gap-2">
-                <i class="pi pi-sliders-h text-xs" style="color: var(--text-muted)" />
-                <h4 class="text-sm font-semibold" style="color: var(--text-primary)">Configure Monitoring</h4>
+                <i class="pi pi-sliders-h text-xs" style="color: var(--text-muted);" />
+                <h4 class="text-sm font-semibold" style="color: var(--text-primary);">Configure Monitoring</h4>
                 <span
                   class="ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider"
                   style="background-color: var(--accent-subtle); color: var(--text-accent);"
                 >Soon</span>
               </div>
-              <p class="mt-1 text-xs" style="color: var(--text-muted)">
+              <p class="mt-1 text-xs" style="color: var(--text-muted);">
                 Set alert thresholds, notification channels, and auto-remediation rules.
               </p>
             </div>
           </div>
         </div>
 
-        <!-- Notice -->
         <div
           class="mb-2 flex items-start gap-3 rounded-xl border p-3.5"
           style="border-color: rgba(245, 158, 11, 0.25); background-color: rgba(245, 158, 11, 0.05);"
         >
-          <i class="pi pi-exclamation-triangle mt-0.5 shrink-0 text-xs" style="color: var(--warning)" />
-          <p class="text-xs leading-relaxed" style="color: var(--text-secondary)">
+          <i class="pi pi-exclamation-triangle mt-0.5 shrink-0 text-xs" style="color: var(--warning);" />
+          <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
             Agent registration token generation requires backend integration — available in a future update.
           </p>
         </div>
@@ -311,11 +311,7 @@
             severity="secondary"
             @click="showAddDialog = false"
           />
-          <Button
-            label="Done"
-            icon="pi pi-check"
-            @click="showAddDialog = false"
-          />
+          <Button label="Done" icon="pi pi-check" @click="showAddDialog = false" />
         </div>
       </template>
     </Dialog>
@@ -323,143 +319,103 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAgentsStore } from '~~/stores/agents'
+import { useWebSocketMetrics } from '~~/composables/useWebSocketMetrics'
+import { useApi } from '~~/composables/useApi'
+import { formatGb, timeAgo, getVramColor as utilsGetVramColor } from '~/utils/dashboard'
 
 definePageMeta({
-  layout: "dashboard",
-});
+  layout: 'dashboard',
+})
 
-const router = useRouter();
+const router = useRouter()
+const agentsStore = useAgentsStore()
+const api = useApi()
 
-interface AgentSummary {
-  id: string;
-  name: string;
-  status: string;
-  hostname: string;
-  gpuCount: number;
-  gpuModel: string;
-  gpuMemoryTotalMb: number;
-  gpuMemoryUsedMb: number;
-  gpuUtilAvgPct: number;
-  runningModels: number;
-  lastSeenAt: string;
+const showAddDialog = ref(false)
+
+// WebSocket connection for real-time metrics
+const ws = useWebSocketMetrics()
+const wsConnectionState = ws.connectionState
+const backendUrl = useRuntimeConfig().public.backendUrl as string
+
+const installCommand = ref(
+  `curl -fsSL https://github.com/modelprism/agent/install.sh | \\\n  bash -s -- --server ${backendUrl} --token <your-token>`,
+)
+
+function getVramPct(data: { gpuMemoryUsedMb: number; gpuMemoryTotalMb: number }): number {
+  if (!data.gpuMemoryTotalMb || data.gpuMemoryTotalMb === 0) return 0
+  return Math.round((data.gpuMemoryUsedMb / data.gpuMemoryTotalMb) * 100)
 }
 
-const loading = ref(true);
-const showAddDialog = ref(false);
-const agentList = ref<AgentSummary[]>([]);
-
-const summaryStats = computed(() => [
-  {
-    label: "Total Servers",
-    value: agentList.value.length,
-    icon: "pi pi-server",
-    color: "text-primary",
-    iconColor: "var(--text-accent)",
-  },
-  {
-    label: "Online",
-    value: agentList.value.filter((a) => a.status === "online").length,
-    icon: "pi pi-check-circle",
-    color: "text-severity-success",
-    iconColor: "var(--success)",
-  },
-  {
-    label: "Offline",
-    value: agentList.value.filter((a) => a.status === "offline").length,
-    icon: "pi pi-times-circle",
-    color: "text-secondary",
-    iconColor: "var(--text-secondary)",
-  },
-  {
-    label: "Degraded",
-    value: agentList.value.filter((a) => a.status === "degraded").length,
-    icon: "pi pi-exclamation-triangle",
-    color: "text-severity-warning",
-    iconColor: "var(--warning)",
-  },
-]);
-
-const backendUrl = useRuntimeConfig().public.backendUrl;
-
-const installCommand = computed(() => {
-  return `curl -fsSL https://github.com/modelprism/agent/install.sh | \\\n  bash -s -- --server ${backendUrl} --token <your-token>`;
-});
-
-function getStatusSeverity(
-  status: string,
-): "success" | "warn" | "secondary" | "info" {
-  switch (status) {
-    case "online":
-      return "success";
-    case "degraded":
-      return "warn";
-    case "offline":
-      return "secondary";
-    default:
-      return "info";
-  }
-}
-
-function getVramColor(pct: number): string {
-  if (pct >= 95) return "#ef4444";
-  if (pct >= 70) return "#f59e0b";
-  return "var(--accent)";
-}
-
-function getVramPct(data: AgentSummary): number {
-  if (!data.gpuMemoryTotalMb || data.gpuMemoryTotalMb === 0) return 0;
-  return Math.round((data.gpuMemoryUsedMb / data.gpuMemoryTotalMb) * 100);
-}
-
-function formatGb(mb: number): string {
-  return (mb / 1024).toFixed(1);
-}
-
-function timeAgo(isoString: string): string {
-  if (!isoString) return "N/A";
-  const seconds = Math.floor(
-    (Date.now() - new Date(isoString).getTime()) / 1000,
-  );
-  if (seconds < 60) return `${seconds}s ago`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-}
-
-function navigateToServer(event: { data: AgentSummary }) {
-  router.push(`/dashboard/servers/${event.data.id}`);
+function navigateToServer(event: { data: { id: string } }) {
+  router.push(`/dashboard/servers/${event.data.id}`)
 }
 
 async function copyInstallCommand() {
   try {
-    await navigator.clipboard.writeText(installCommand.value);
+    await navigator.clipboard.writeText(installCommand.value)
     useToast().add({
-      severity: "success",
-      summary: "Copied",
-      detail: "Install command copied to clipboard",
+      severity: 'success',
+      summary: 'Copied',
+      detail: 'Install command copied to clipboard',
       life: 3000,
-    });
+    })
   } catch {
     useToast().add({
-      severity: "error",
-      summary: "Failed",
-      detail: "Could not copy to clipboard",
+      severity: 'error',
+      summary: 'Failed',
+      detail: 'Could not copy to clipboard',
       life: 3000,
-    });
+    })
   }
 }
 
 onMounted(async () => {
-  // TODO M1-T9: Fetch agents from backend
-  // const agentsStore = useAgentsStore()
-  // await agentsStore.fetchAgents()
-  // agentList.value = agentsStore.agents
+  agentsStore.setLoading(true)
+  try {
+    // Attempt to fetch agents from backend
+    const response = await api.get('/api/agents')
+    const data = (response as any)?.data
+    if (data && Array.isArray(data)) {
+      const parsed = data.map((item: any) => ({
+        id: item.id,
+        name: item.attributes.name,
+        status: item.attributes.status,
+        hostname: item.attributes.hostname,
+        agentVersion: item.attributes.agent_version,
+        gpuCount: item.attributes.gpu_count,
+        gpuModel: item.attributes.gpu_model,
+        gpuMemoryTotalMb: item.attributes.gpu_memory_total_mb,
+        gpuMemoryUsedMb: item.attributes.gpu_memory_used_mb,
+        gpuUtilAvgPct: item.attributes.gpu_util_avg_pct,
+        cpuCores: item.attributes.cpu_cores,
+        ramTotalGb: item.attributes.ram_total_gb,
+        ramUsedGb: item.attributes.ram_used_gb,
+        diskTotalGb: item.attributes.disk_total_gb,
+        diskUsedGb: item.attributes.disk_used_gb,
+        runningModels: item.attributes.running_models,
+        uptimeSeconds: item.attributes.uptime_seconds,
+        lastSeenAt: item.attributes.last_seen_at,
+        createdAt: item.attributes.created_at,
+      }))
+      const meta = (response as any)?.meta
+      agentsStore.setAgents(parsed, meta)
+    }
+  } catch {
+    // Backend unavailable — leave loading false, store remains empty
+    agentsStore.setError('Could not reach backend')
+  } finally {
+    agentsStore.setLoading(false)
+  }
 
-  // Placeholder data for scaffold
-  setTimeout(() => {
-    loading.value = false;
-  }, 500);
-});
+  // Connect WebSocket for live updates
+  ws.connect()
+})
+
+onUnmounted(() => {
+  ws.disconnect()
+})
 </script>

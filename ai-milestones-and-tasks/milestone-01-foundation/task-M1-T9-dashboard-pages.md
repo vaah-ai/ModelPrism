@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** High
-> **Status:** ⚪ Not Started
+> **Status:** 🟢 Complete
 >
 > **Impact from M1-T8:** Nuxt Dashboard Scaffold completed.
 > - Dashboard layout at `app/layouts/dashboard.vue` with sidebar PanelMenu navigation and responsive overlay
@@ -122,7 +122,7 @@ M1-T9-04 (Live Log) ──────────────────┼─
 
 | ID | Title | Effort | Depends On | Priority |
 |----|-------|--------|------------|----------|
-| M1-T9-01 | Shared Types, Utilities & Common Components | 0.5d | None | Critical |
+| M1-T9-01 | Shared Types, Utilities & Common Components | ⚪ Not Started | 0.5d | None | Critical |
 | M1-T9-02 | Dashboard Components (SystemResources, QueueDiagnostics, ModelList) | 1d | M1-T9-01 | High |
 | M1-T9-03 | uPlot Real-Time Charts (GpuMetricsChart) | 1.5d | M1-T9-01 | High |
 | M1-T9-04 | Live Log Viewer (LiveLog) | 1d | M1-T9-01 | Medium |
