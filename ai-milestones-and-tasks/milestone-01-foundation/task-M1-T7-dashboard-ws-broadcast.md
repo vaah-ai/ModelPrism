@@ -2,7 +2,7 @@
 
 > **Milestone:** M1 (Foundation)
 > **Priority:** High
-> **Status:** 🔵 In Progress
+> **Status:** 🟢 Complete
 > **Estimated Effort:** 2 days
 
 > **Impact from M1-T4:** Agent metrics are already published to Redis channels `metrics:{agent_id}` and `vllm_metrics:{agent_id}` by the agent WebSocket handler. This task needs to create a *dashboard* WebSocket endpoint (`/ws/dashboard/{agent_id}`) that subscribes to these Redis channels and forwards to browser clients. The `PubSubHelper` class in `app/redis.py` can be used for subscription. Connection state is tracked in Redis at `agent:{id}:ws_connected` (TTL-based). Running vLLM instances are stored at `agent:{id}:running_instances`.
@@ -116,3 +116,33 @@ Implement the pipeline that broadcasts real-time metrics from the backend to bro
 - Client-side 500ms batching is implemented in the Pinia store composable (dashboard side), not in the backend
 - For MVP, no message filtering or aggregation on the backend — forward as-is
 - Message format forwarded to dashboard matches the agent metric format (flat JSON, no envelope)
+
+## Abstraction Audit — Post-Implementation Findings
+
+### Current Layer Structure
+
+```
+agent_ws.py (publishes) → Redis pub/sub → dashboard_ws.py (subscribes + transforms)
+                                            ├── _transform_metrics()        # pure function, inline
+                                            ├── _transform_vllm_metrics()   # pure function, inline
+                                            └── _route_channel_message()    # dispatch, inline
+```
+
+The metric transform functions and channel router are kept as private functions in the WebSocket module. This follows the same pattern as `agent_ws.py`'s `_handle_*` handlers. The only already-extracted utility is `avg_gpu_field()` in `app/utils/metric_helpers.py`.
+
+### Identified Abstraction Gaps
+
+| # | Gap | Severity | Recommendation |
+|---|-----|----------|---------------|
+| A1 | No typed schema for dashboard WS message format | 🟡 Low | Extract dashboard-format fields into Pydantic model in `app/schemas/`. Currently the same dict keys are repeated across `_transform_metrics()` and `_transform_vllm_metrics()` as magic strings. Creates risk of field name drift if a third transform is added. |
+| A2 | Transform functions mixed in WS handler file | 🟢 Low | Currently defensible (both are private, no external reuse). If a third transform variant appears, extract into `app/utils/metric_transforms.py`. |
+
+### Fix Applied to A1
+
+The dashboard WS message format has been extracted into `app/schemas/dashboard_ws.py` as a Pydantic model `DashboardMetricsMessage`. Both `_transform_metrics()` and `_transform_vllm_metrics()` now return this typed model instead of raw dicts. The WebSocket handler calls `.model_dump(exclude_none=True)` before forwarding.
+
+This provides:
+- **Type safety** — field types are validated by Pydantic
+- **Single source of truth** — the schema file is the one place where the dashboard-format contract lives
+- **Editor autocompletion** — any module that produces dashboard messages uses the typed model
+- **Self-documenting** — the Pydantic model docstrings serve as the message format reference

@@ -5,6 +5,15 @@
 > **Status:** ⚪ Not Started
 >
 > **Impact from M1-T8:** Nuxt Dashboard Scaffold completed.
+>
+> **Impact from M1-T7:** Dashboard WebSocket Broadcast completed.
+> - Backend provides `/ws/dashboard` (all agents) and `/ws/dashboard/{agent_id}` (per-agent) endpoints
+> - Endpoints subscribe to Redis `metrics:{id}` channel (published by agent_ws.py every 2s) and forward transformed (averaged) flat metrics
+> - Transformed format matches what `useWebSocketMetrics.ts` expects: `gpu_util_avg_pct`, `gpu_memory_used_mb`, `ram_used_gb`, `cpu_pct`, etc.
+> - Raw GPU arrays from agents are averaged via `avg_gpu_field()` before forwarding
+> - Backend handles ping/pong keepalive, replay_request (MVP stub — returns empty batch), and clean disconnect
+> - No auth for MVP — direct WS connections
+> - See `backend/app/ws/dashboard_ws.py` for handler implementation
 > - Dashboard layout at `app/layouts/dashboard.vue` with sidebar PanelMenu navigation and responsive overlay
 > - Pages scaffolded: `dashboard/index.vue` (overview) and `dashboard/servers/[id].vue` (detail) with placeholder panels marked "M1-T9"
 > - Pinia stores: `stores/agents.ts` (agent list with fetchAgents, applyMetricDelta, updateAgentStatus) and `stores/metrics.ts` (per-agent metric buffer)
