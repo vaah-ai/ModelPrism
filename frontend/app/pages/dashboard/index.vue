@@ -187,92 +187,102 @@
       v-model:visible="showAddDialog"
       :modal="true"
       class="w-full max-w-xl"
-      :pt="{ title: { class: 'flex items-center gap-2 text-base' } }"
+      :pt="{
+        root: {
+          class: 'border shadow-2xl',
+          style: 'border-color: var(--border-color)',
+        },
+        header: { class: 'pb-0' },
+        content: { class: 'pt-3' },
+        title: { class: 'flex items-center gap-2 text-base' },
+      }"
     >
       <template #header>
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-3">
           <span
-            class="flex h-8 w-8 items-center justify-center rounded-lg"
-            style="background-color: var(--accent-subtle)"
+            class="flex h-9 w-9 items-center justify-center rounded-lg"
+            style="background: linear-gradient(135deg, var(--accent), #0e7490);"
           >
-            <i class="pi pi-server" style="color: var(--text-accent); font-size: 0.875rem" />
+            <i class="pi pi-server" style="color: #fff; font-size: 1rem" />
           </span>
-          <span class="text-sm font-semibold" style="color: var(--text-primary)">Add GPU Server</span>
+          <div>
+            <span class="text-sm font-semibold" style="color: var(--text-primary)">Add GPU Server</span>
+            <p class="text-xs" style="color: var(--text-muted)">Connect a new inference node</p>
+          </div>
         </div>
       </template>
-      <div class="space-y-5">
-        <!-- Step 1: Install -->
-        <div class="card-elevated rounded-xl p-5">
-          <div class="mb-3 flex items-center gap-3">
-            <span
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
-              style="background-color: var(--accent); color: #fff"
-            >1</span>
-            <div>
-              <h4 class="text-sm font-semibold" style="color: var(--text-primary)">
-                Install the Agent
-              </h4>
-              <p class="text-xs" style="color: var(--text-muted)">
-                Run once on each GPU server
-              </p>
-            </div>
-          </div>
-          <div class="relative">
-            <div
-              class="w-full overflow-hidden rounded-lg border font-mono text-sm leading-relaxed"
-              style="background-color: #0a0a0b; border-color: var(--border-color);"
-            >
-              <div class="flex items-start justify-between px-3 py-2">
-                <span class="text-xs font-medium uppercase tracking-wider" style="color: var(--text-muted);">bash</span>
-              </div>
-              <Textarea
-                :value="installCommand"
-                readonly
-                rows="3"
-                class="w-full border-0 font-mono text-sm"
-                :pt="{
-                  root: {
-                    style: {
-                      resize: 'none',
-                      borderRadius: '0',
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'var(--text-secondary)',
-                      padding: '0.5rem 0.75rem',
-                      fontFamily: 'var(--font-mono)',
-                    },
-                  },
-                }"
-              />
-            </div>
-            <Button
-              icon="pi pi-copy"
-              severity="secondary"
-              text
-              rounded
-              class="absolute right-4 top-9"
-              :pt="{ root: { class: 'h-8 w-8' } }"
-              @click="copyInstallCommand"
-            />
-          </div>
-        </div>
 
-        <!-- Step 2: Configure -->
-        <div
-          class="card-elevated rounded-xl p-5"
-          style="opacity: 0.5; pointer-events: none"
-        >
-          <div class="flex items-center gap-3">
-            <span
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
-              style="background-color: var(--text-muted); color: var(--bg-page)"
-            >2</span>
-            <div>
-              <h4 class="text-sm font-semibold" style="color: var(--text-primary)">
-                Configure Monitoring
-              </h4>
-              <p class="text-xs" style="color: var(--text-muted)">
-                Coming soon — set alert thresholds &amp; notifications
+      <div class="space-y-0">
+        <!-- Step connector line -->
+        <div class="relative pl-10">
+          <!-- Vertical connector -->
+          <div class="absolute left-[15px] top-2 h-[calc(100%+1rem)] w-px" style="background: linear-gradient(to bottom, var(--accent), var(--border-color));" />
+
+          <!-- Step 1: Install -->
+          <div class="relative pb-8">
+            <div
+              class="absolute -left-[7px] top-0 z-10 flex h-[15px] w-[15px] items-center justify-center rounded-full"
+              style="background-color: var(--accent);"
+            >
+              <span class="text-[9px] font-bold" style="color: #fff">1</span>
+            </div>
+            <div class="rounded-xl border p-4 transition-colors" style="border-color: var(--border-color); background-color: var(--bg-surface);">
+              <div class="mb-3">
+                <h4 class="text-sm font-semibold" style="color: var(--text-primary)">Install the Agent</h4>
+                <p class="text-xs leading-relaxed" style="color: var(--text-muted); margin-top: 1px;">
+                  Run this one-liner on your GPU server. The agent auto-registers with ModelPrism.
+                </p>
+              </div>
+
+              <!-- Terminal emulator -->
+              <div class="overflow-hidden rounded-lg border" style="border-color: var(--border-color); background-color: #050505;">
+                <!-- Title bar -->
+                <div class="flex items-center gap-1.5 border-b px-3 py-1.5" style="border-color: var(--border-color); background-color: #0a0a0b;">
+                  <span class="h-2.5 w-2.5 rounded-full" style="background-color: #ef4444;" />
+                  <span class="h-2.5 w-2.5 rounded-full" style="background-color: #f59e0b;" />
+                  <span class="h-2.5 w-2.5 rounded-full" style="background-color: #22c55e;" />
+                  <span class="ml-2 text-[10px] font-medium uppercase tracking-wider" style="color: var(--text-muted);">Terminal — bash</span>
+                </div>
+                <!-- Code area -->
+                <div class="relative">
+                  <pre class="m-0 overflow-x-auto px-3 py-2.5 font-mono text-xs leading-relaxed" style="color: #e4e4e7;">$ <span style="color: #22d3ee;">curl</span> <span style="color: #818cf8;">-fsSL</span> <span style="color: #a1a1aa;">https://github.com/modelprism/agent/install.sh</span> <span style="color: #71717a;">| \</span>
+  <span style="color: #22d3ee;">bash</span> <span style="color: #818cf8;">-s --</span> <span style="color: #f59e0b;">--server</span> <span style="color: #a1a1aa;">{{ backendUrl }}</span> <span style="color: #f59e0b;">--token</span> <span style="color: #c084fc;">&lt;your-token&gt;</span></pre>
+                  <Button
+                    icon="pi pi-copy"
+                    severity="secondary"
+                    text
+                    rounded
+                    class="absolute right-2 top-2"
+                    :pt="{ root: { class: 'h-7 w-7 opacity-60 hover:opacity-100' } }"
+                    @click="copyInstallCommand"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Configure (dimmed) -->
+          <div class="relative pb-4">
+            <div
+              class="absolute -left-[7px] top-0 z-10 flex h-[15px] w-[15px] items-center justify-center rounded-full"
+              style="background-color: var(--text-muted);"
+            >
+              <span class="text-[9px] font-bold" style="color: var(--bg-page)">2</span>
+            </div>
+            <div
+              class="rounded-xl border p-4 transition-colors"
+              style="border-color: var(--border-color); background-color: var(--bg-surface); opacity: 0.55;"
+            >
+              <div class="flex items-center gap-2">
+                <i class="pi pi-sliders-h text-xs" style="color: var(--text-muted)" />
+                <h4 class="text-sm font-semibold" style="color: var(--text-primary)">Configure Monitoring</h4>
+                <span
+                  class="ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider"
+                  style="background-color: var(--accent-subtle); color: var(--text-accent);"
+                >Soon</span>
+              </div>
+              <p class="mt-1 text-xs" style="color: var(--text-muted)">
+                Set alert thresholds, notification channels, and auto-remediation rules.
               </p>
             </div>
           </div>
@@ -280,36 +290,28 @@
 
         <!-- Notice -->
         <div
-          class="flex items-start gap-3 rounded-xl border p-4"
-          style="
-            border-color: rgba(245, 158, 11, 0.3);
-            background-color: rgba(245, 158, 11, 0.06);
-          "
+          class="mb-2 flex items-start gap-3 rounded-xl border p-3.5"
+          style="border-color: rgba(245, 158, 11, 0.25); background-color: rgba(245, 158, 11, 0.05);"
         >
-          <i
-            class="pi pi-exclamation-triangle mt-0.5 shrink-0"
-            style="color: var(--warning); font-size: 0.875rem"
-          />
-          <p class="text-sm leading-relaxed" style="color: var(--text-secondary)">
-            Agent registration token generation will be available after backend integration.
+          <i class="pi pi-exclamation-triangle mt-0.5 shrink-0 text-xs" style="color: var(--warning)" />
+          <p class="text-xs leading-relaxed" style="color: var(--text-secondary)">
+            Agent registration token generation requires backend integration — available in a future update.
           </p>
         </div>
       </div>
 
       <template #footer>
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs" style="color: var(--text-muted)">
-            Need help? See the
-            <a
-              href="#"
-              class="underline underline-offset-2"
-              style="color: var(--text-accent)"
-            >docs</a>
-          </span>
+        <div class="flex w-full items-center justify-between gap-2">
+          <Button
+            label="Cancel"
+            icon="pi pi-times"
+            variant="text"
+            severity="secondary"
+            @click="showAddDialog = false"
+          />
           <Button
             label="Done"
             icon="pi pi-check"
-            severity="secondary"
             @click="showAddDialog = false"
           />
         </div>
