@@ -203,7 +203,7 @@ const panelMenuPt = {
   },
   headerLink: ({ context }: { context: { active: boolean } }) => ({
     class: [
-      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
+      "flex items-center px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
     ],
     style: {
       color: context.active ? "var(--text-accent)" : "",
@@ -227,7 +227,7 @@ const panelMenuPt = {
     class: "text-sm",
   },
   submenuIcon: {
-    class: "ml-auto text-xs transition-transform duration-200",
+    class: "ml-auto text-xs transition-transform duration-200 order-last",
   },
   rootList: {
     class: "list-none p-0 m-0",
