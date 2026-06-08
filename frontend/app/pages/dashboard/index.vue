@@ -178,12 +178,6 @@
           <p class="mb-4 text-xs" style="color: var(--text-secondary)">
             Add your first server to get started.
           </p>
-          <Button
-            label="Add Server"
-            icon="pi pi-plus"
-            size="small"
-            @click="showAddDialog = true"
-          />
         </div>
       </template>
     </Card>

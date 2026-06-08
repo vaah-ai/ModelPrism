@@ -171,6 +171,30 @@ const ModelPrismPreset = definePreset(Aura, {
         hoverBorderColor: '{surface.400}',
       },
     },
+    dialog: {
+      root: {
+        background: '{surface.100}',
+        borderColor: '{surface.200}',
+        color: '{surface.700}',
+        borderRadius: '{border.radius.lg}',
+        shadow: '0 25px 50px -12px rgb(0 0 0 / 0.5)',
+      },
+      header: {
+        padding: '1rem 1.25rem',
+        gap: '0.5rem',
+      },
+      title: {
+        fontSize: '1rem',
+        fontWeight: '600',
+      },
+      content: {
+        padding: '0 1.25rem 1rem',
+      },
+      footer: {
+        padding: '0 1.25rem 1rem',
+        gap: '0.5rem',
+      },
+    },
   },
 })
 
