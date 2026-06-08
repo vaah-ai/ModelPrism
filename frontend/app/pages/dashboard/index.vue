@@ -185,66 +185,134 @@
     <!-- Add Server Dialog -->
     <Dialog
       v-model:visible="showAddDialog"
-      header="Add GPU Server"
       :modal="true"
-      class="w-full max-w-lg"
+      class="w-full max-w-xl"
+      :pt="{ title: { class: 'flex items-center gap-2 text-base' } }"
     >
-      <div class="space-y-4">
-        <div
-          class="card-base rounded-lg p-4"
-          style="background-color: var(--bg-elevated)"
-        >
-          <h4 class="mb-2 font-medium" style="color: var(--text-primary)">
-            Install the Agent
-          </h4>
-          <p class="mb-3 text-sm" style="color: var(--text-secondary)">
-            Run this command on your GPU server to install the ModelPrism agent:
-          </p>
+      <template #header>
+        <div class="flex items-center gap-2.5">
+          <span
+            class="flex h-8 w-8 items-center justify-center rounded-lg"
+            style="background-color: var(--accent-subtle)"
+          >
+            <i class="pi pi-server" style="color: var(--text-accent); font-size: 0.875rem" />
+          </span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary)">Add GPU Server</span>
+        </div>
+      </template>
+      <div class="space-y-5">
+        <!-- Step 1: Install -->
+        <div class="card-elevated rounded-xl p-5">
+          <div class="mb-3 flex items-center gap-3">
+            <span
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+              style="background-color: var(--accent); color: #fff"
+            >1</span>
+            <div>
+              <h4 class="text-sm font-semibold" style="color: var(--text-primary)">
+                Install the Agent
+              </h4>
+              <p class="text-xs" style="color: var(--text-muted)">
+                Run once on each GPU server
+              </p>
+            </div>
+          </div>
           <div class="relative">
-            <Textarea
-              :value="installCommand"
-              readonly
-              rows="3"
-              class="w-full font-mono text-sm"
-              :pt="{ root: { style: { resize: 'none' } } }"
-            />
+            <div
+              class="w-full overflow-hidden rounded-lg border font-mono text-sm leading-relaxed"
+              style="background-color: #0a0a0b; border-color: var(--border-color);"
+            >
+              <div class="flex items-start justify-between px-3 py-2">
+                <span class="text-xs font-medium uppercase tracking-wider" style="color: var(--text-muted);">bash</span>
+              </div>
+              <Textarea
+                :value="installCommand"
+                readonly
+                rows="3"
+                class="w-full border-0 font-mono text-sm"
+                :pt="{
+                  root: {
+                    style: {
+                      resize: 'none',
+                      borderRadius: '0',
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      padding: '0.5rem 0.75rem',
+                      fontFamily: 'var(--font-mono)',
+                    },
+                  },
+                }"
+              />
+            </div>
             <Button
               icon="pi pi-copy"
               severity="secondary"
               text
               rounded
-              class="absolute right-2 top-2"
+              class="absolute right-4 top-9"
+              :pt="{ root: { class: 'h-8 w-8' } }"
               @click="copyInstallCommand"
             />
           </div>
         </div>
 
+        <!-- Step 2: Configure -->
         <div
-          class="rounded-lg border p-3"
+          class="card-elevated rounded-xl p-5"
+          style="opacity: 0.5; pointer-events: none"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold"
+              style="background-color: var(--text-muted); color: var(--bg-page)"
+            >2</span>
+            <div>
+              <h4 class="text-sm font-semibold" style="color: var(--text-primary)">
+                Configure Monitoring
+              </h4>
+              <p class="text-xs" style="color: var(--text-muted)">
+                Coming soon — set alert thresholds &amp; notifications
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notice -->
+        <div
+          class="flex items-start gap-3 rounded-xl border p-4"
           style="
-            border-color: #f59e0b;
-            background-color: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.3);
+            background-color: rgba(245, 158, 11, 0.06);
           "
         >
-          <p
-            class="flex items-center gap-2 text-sm"
-            style="color: var(--warning)"
-          >
-            <i class="pi pi-exclamation-triangle" />
-            <span
-              >Agent registration token generation will be available after
-              backend integration.</span
-            >
+          <i
+            class="pi pi-exclamation-triangle mt-0.5 shrink-0"
+            style="color: var(--warning); font-size: 0.875rem"
+          />
+          <p class="text-sm leading-relaxed" style="color: var(--text-secondary)">
+            Agent registration token generation will be available after backend integration.
           </p>
         </div>
       </div>
 
       <template #footer>
-        <Button
-          label="Close"
-          icon="pi pi-times"
-          @click="showAddDialog = false"
-        />
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs" style="color: var(--text-muted)">
+            Need help? See the
+            <a
+              href="#"
+              class="underline underline-offset-2"
+              style="color: var(--text-accent)"
+            >docs</a>
+          </span>
+          <Button
+            label="Done"
+            icon="pi pi-check"
+            severity="secondary"
+            @click="showAddDialog = false"
+          />
+        </div>
       </template>
     </Dialog>
   </div>
@@ -309,10 +377,10 @@ const summaryStats = computed(() => [
   },
 ]);
 
+const backendUrl = useRuntimeConfig().public.backendUrl;
+
 const installCommand = computed(() => {
-  const backendUrl = useRuntimeConfig().public.backendUrl;
-  return `curl -fsSL https://github.com/modelprism/agent/install.sh | \\
-  bash -s -- --server ${backendUrl} --token <your-token>`;
+  return `curl -fsSL https://github.com/modelprism/agent/install.sh | \\\n  bash -s -- --server ${backendUrl} --token <your-token>`;
 });
 
 function getStatusSeverity(
