@@ -236,26 +236,28 @@
 
               <!-- Terminal emulator -->
               <div class="overflow-hidden rounded-lg border" style="border-color: var(--border-color); background-color: #050505;">
-                <!-- Title bar -->
+                <!-- Title bar with copy button -->
                 <div class="flex items-center gap-1.5 border-b px-3 py-1.5" style="border-color: var(--border-color); background-color: #0a0a0b;">
                   <span class="h-2.5 w-2.5 rounded-full" style="background-color: #ef4444;" />
                   <span class="h-2.5 w-2.5 rounded-full" style="background-color: #f59e0b;" />
                   <span class="h-2.5 w-2.5 rounded-full" style="background-color: #22c55e;" />
                   <span class="ml-2 text-[10px] font-medium uppercase tracking-wider" style="color: var(--text-muted);">Terminal — bash</span>
+                  <div class="ml-auto">
+                    <Button
+                      icon="pi pi-copy"
+                      severity="secondary"
+                      text
+                      rounded
+                      :pt="{ root: { class: 'h-6 w-6 opacity-50 hover:opacity-100' } }"
+                      :aria-label="'Copy install command'"
+                      @click="copyInstallCommand"
+                    />
+                  </div>
                 </div>
                 <!-- Code area -->
-                <div class="relative">
-                  <pre class="m-0 whitespace-pre-wrap break-all px-3 py-2.5 font-mono text-xs leading-relaxed" style="color: #e4e4e7;">$ <span style="color: #22d3ee;">curl</span> <span style="color: #818cf8;">-fsSL</span> <span style="color: #a1a1aa;">https://github.com/modelprism/agent/install.sh</span> <span style="color: #71717a;">| \</span>
+                <div class="px-3 py-2.5 font-mono text-xs leading-relaxed" style="color: #e4e4e7;">
+                  <pre class="m-0 whitespace-pre-wrap break-all">$ <span style="color: #22d3ee;">curl</span> <span style="color: #818cf8;">-fsSL</span> <span style="color: #a1a1aa;">https://github.com/modelprism/agent/install.sh</span> <span style="color: #71717a;">| \</span>
   <span style="color: #22d3ee;">bash</span> <span style="color: #818cf8;">-s -</span><span style="color: #818cf8;">-</span> <span style="color: #f59e0b;">--server</span> <span style="color: #a1a1aa;">{{ backendUrl }}</span> <span style="color: #f59e0b;">--token</span> <span style="color: #c084fc;">&lt;your-token&gt;</span></pre>
-                  <Button
-                    icon="pi pi-copy"
-                    severity="secondary"
-                    text
-                    rounded
-                    class="absolute right-2 top-2"
-                    :pt="{ root: { class: 'h-7 w-7 opacity-60 hover:opacity-100' } }"
-                    @click="copyInstallCommand"
-                  />
                 </div>
               </div>
             </div>

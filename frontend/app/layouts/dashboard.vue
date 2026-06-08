@@ -203,21 +203,11 @@ const panelMenuPt = {
   },
   headerLink: ({ context }: { context: { active: boolean } }) => ({
     class: [
-      "flex items-center px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
+      "flex items-center px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none sidebar-nav-link",
     ],
     style: {
       color: context.active ? "var(--text-accent)" : "",
       backgroundColor: context.active ? "var(--bg-active)" : "transparent",
-    },
-    onmouseenter(el: HTMLElement) {
-      if (!el.style.color || el.style.color === "var(--text-accent)") return;
-      el.style.backgroundColor = "var(--bg-hover)";
-      el.style.color = "var(--text-primary)";
-    },
-    onmouseleave(el: HTMLElement) {
-      if (!el.style.color || el.style.color === "var(--text-accent)") return;
-      el.style.backgroundColor = "transparent";
-      el.style.color = "";
     },
   }),
   headerIcon: {
@@ -261,5 +251,11 @@ const panelMenuPt = {
 .sidebar-enter-from,
 .sidebar-leave-to {
   opacity: 0;
+}
+
+/* Sidebar nav link hover — replaces inline JS handlers */
+.sidebar-nav-link:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
 }
 </style>
