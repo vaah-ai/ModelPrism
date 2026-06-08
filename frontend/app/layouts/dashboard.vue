@@ -16,32 +16,22 @@
     >
       <!-- Brand -->
       <div
-        class="flex h-14 items-center justify-between border-b px-4"
+        class="flex h-14 shrink-0 items-center gap-3 border-b px-4"
         style="border-color: var(--border-color)"
       >
-        <NuxtLink to="/dashboard" class="flex items-center gap-2">
-          <!-- Logo mark -->
+        <NuxtLink to="/dashboard" class="flex items-center gap-2.5">
           <span
-            class="flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold"
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
             style="background-color: var(--accent); color: #fff"
           >MP</span>
           <span class="text-sm font-bold tracking-tight" style="color: var(--text-primary)"
             >ModelPrism</span
           >
         </NuxtLink>
-        <Button
-          icon="pi pi-times"
-          text
-          rounded
-          severity="secondary"
-          class="lg:hidden"
-          :pt="{ root: { class: 'h-9 w-9' } }"
-          @click="sidebarOpen = false"
-        />
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto px-2 py-3">
+      <nav class="flex-1 overflow-y-auto px-2 py-2">
         <PanelMenu
           :model="navItems"
           class="border-none"
@@ -51,11 +41,10 @@
 
       <!-- Bottom section -->
       <div
-        class="flex flex-col border-t px-4 py-4"
+        class="flex shrink-0 items-center justify-center border-t px-4 py-3"
         style="border-color: var(--border-color)"
       >
-        <!-- Version -->
-        <span class="mb-2 text-center text-xs" style="color: var(--text-muted)">
+        <span class="text-xs" style="color: var(--text-muted)">
           v{{ appConfig.version }}
         </span>
       </div>
@@ -204,30 +193,41 @@ const panelMenuPt = {
     class: "border-none bg-transparent",
   },
   panel: {
-    class: "border-none rounded-lg overflow-hidden",
-  },
-  submenu: {
     class: "border-none",
   },
+  submenu: {
+    class: "border-none pl-1",
+  },
   header: {
-    class: "rounded-lg overflow-hidden",
+    class: "",
   },
   headerLink: ({ context }: { context: { active: boolean } }) => ({
     class: [
-      "flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
+      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium no-underline cursor-pointer select-none",
     ],
     style: {
       color: context.active ? "var(--text-accent)" : "",
+      backgroundColor: context.active ? "var(--bg-active)" : "transparent",
+    },
+    onmouseenter(el: HTMLElement) {
+      if (!el.style.color || el.style.color === "var(--text-accent)") return;
+      el.style.backgroundColor = "var(--bg-hover)";
+      el.style.color = "var(--text-primary)";
+    },
+    onmouseleave(el: HTMLElement) {
+      if (!el.style.color || el.style.color === "var(--text-accent)") return;
+      el.style.backgroundColor = "transparent";
+      el.style.color = "";
     },
   }),
   headerIcon: {
-    class: "text-base w-5 text-center shrink-0",
+    class: "text-base w-5 shrink-0",
   },
   headerLabel: {
-    class: "text-sm font-medium",
+    class: "text-sm",
   },
   submenuIcon: {
-    class: "ml-auto text-xs transition-transform duration-150",
+    class: "ml-auto text-xs transition-transform duration-200",
   },
   rootList: {
     class: "list-none p-0 m-0",

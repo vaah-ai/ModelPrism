@@ -82,19 +82,19 @@ const ModelPrismPreset = definePreset(Aura, {
         color: '{surface.600}',
         focusColor: '{surface.800}',
         borderRadius: '0.375rem',
-        gap: '0.5rem',
-        padding: '0.375rem 0.75rem',
+        gap: '0.625rem',
+        padding: '0.5rem 0.75rem',
         icon: {
-          color: '{surface.600}',
-          focusColor: '{surface.800}',
+          color: '{surface.500}',
+          focusColor: '{surface.700}',
         },
       },
       submenuIcon: {
-        color: '{surface.600}',
-        focusColor: '{surface.800}',
+        color: '{surface.500}',
+        focusColor: '{surface.700}',
       },
       submenu: {
-        indent: '0.75rem',
+        indent: '0',
       },
     },
     card: {
