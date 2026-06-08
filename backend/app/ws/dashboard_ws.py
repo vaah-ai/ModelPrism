@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["dashboard_ws"])
 
+# Redis channel patterns
+_METRICS_CHANNEL = "metrics:{id}"
+_VLLM_METRICS_CHANNEL = "vllm_metrics:{id}"
+
 # ── Metric Transformation ──────────────────────────────────────────
 
 
@@ -74,6 +78,7 @@ def _transform_metrics(
         "ts": ts_iso,
         "gpu_util_avg_pct": avg_util_pct,
         "gpu_memory_used_mb": avg_mem_used,
+        "gpu_cache_pct": raw.get("gpu_cache_pct"),
         "ram_used_gb": raw.get("ram_used_gb"),
         "ram_total_gb": raw.get("ram_total_gb"),
         "cpu_pct": raw.get("cpu_pct"),
@@ -83,8 +88,153 @@ def _transform_metrics(
         "disk_used_gb": raw.get("disk_used_gb"),
         "disk_total_gb": raw.get("disk_total_gb"),
         "disk_pct": raw.get("disk_pct"),
-        "gpu_cache_pct": raw.get("gpu_cache_pct"),
+        # The system metrics snapshot does not carry running_models;
+        # that field is populated by vLLM metrics transform instead.
+        "running_models": None,
+        "running": None,
+        "waiting": None,
     }
+
+
+def _transform_vllm_metrics(
+    raw: dict[str, Any],
+    agent_id: str,
+) -> dict[str, Any] | None:
+    """Transform a raw vLLM metric entry into the dashboard format.
+
+    vLLM metrics carry per-instance LLM telemetry (request counts,
+    throughput, TTFT).  The frontend uses ``running`` / ``waiting``
+    for request queue charts and ``running_models`` to indicate
+    that at least one model is deployed.
+
+    Parameters
+    ----------
+    raw:
+        The raw vLLM metric payload as published to Redis.
+    agent_id:
+        The agent identifier to inject into the forwarded message.
+
+    Returns
+    -------
+    The transformed payload, or ``None`` if the payload cannot be parsed.
+    """
+    ts_raw = raw.get("ts")
+    if ts_raw is None:
+        return None
+
+    if isinstance(ts_raw, (int, float)):
+        ts_iso = datetime.fromtimestamp(ts_raw, tz=UTC).isoformat()
+    else:
+        ts_iso = str(ts_raw)
+
+    model_name = raw.get("model_name")
+    return {
+        "type": "metrics",
+        "agent_id": agent_id,
+        "ts": ts_iso,
+        "gpu_util_avg_pct": raw.get("gpu_cache_pct"),
+        "gpu_memory_used_mb": None,
+        "gpu_cache_pct": raw.get("gpu_cache_pct"),
+        "ram_used_gb": None,
+        "ram_total_gb": None,
+        "cpu_pct": None,
+        "load_1": None,
+        "load_5": None,
+        "load_15": None,
+        "disk_used_gb": None,
+        "disk_total_gb": None,
+        "disk_pct": None,
+        # vLLM-specific fields
+        "running_models": 1 if model_name else 0,
+        "running": raw.get("running"),
+        "waiting": raw.get("waiting"),
+    }
+
+
+def _route_channel_message(
+    channel: str,
+    data: str,
+    agent_id: str,
+) -> dict[str, Any] | None:
+    """Parse and transform a message from any subscribed Redis channel.
+
+    Inspects the channel prefix to determine whether the payload is a
+    system metrics snapshot or a vLLM metrics entry and routes to the
+    appropriate transform function.
+    """
+    try:
+        payload = json.loads(data)
+    except json.JSONDecodeError:
+        return None
+
+    if channel.startswith("vllm_metrics:"):
+        return _transform_vllm_metrics(payload, agent_id)
+    return _transform_metrics(payload, agent_id)
+
+
+# ── Shared Reader Helpers ──────────────────────────────────────────
+
+
+async def _forward_pubsub_messages(
+    pubsub: Any,  # redis.asyncio.client.PubSub
+    websocket: WebSocket,
+    is_pattern: bool,
+) -> None:
+    """Read from a Redis pub/sub connection and forward transformed messages.
+
+    Parameters
+    ----------
+    pubsub:
+        An already-subscribed Redis pub/sub instance.
+    websocket:
+        The dashboard WebSocket to forward to.
+    is_pattern:
+        ``True`` if using ``PSUBSCRIBE`` (messages have type ``pmessage``),
+        ``False`` if using ``SUBSCRIBE`` (type ``message``).
+    """
+    expected_type = "pmessage" if is_pattern else "message"
+
+    async for message in pubsub.listen():
+        if message["type"] != expected_type:
+            continue
+
+        msg_channel: str = message["channel"]
+        raw_data = message.get("data")
+        if isinstance(raw_data, bytes):
+            raw_data = raw_data.decode("utf-8")
+        if not isinstance(raw_data, str):
+            continue
+
+        # Extract agent_id from the channel name
+        # Channels: "metrics:{id}" or "vllm_metrics:{id}"
+        agent_id = msg_channel.split(":", 1)[1] if ":" in msg_channel else "unknown"
+
+        transformed = _route_channel_message(msg_channel, raw_data, agent_id)
+        if transformed is not None:
+            try:
+                await websocket.send_json(transformed)
+            except Exception:
+                break  # Connection likely closed
+
+
+async def _client_reader(websocket: WebSocket) -> None:
+    """Read messages from the dashboard client (pings, replay requests)."""
+    try:
+        async for raw in websocket.iter_json():
+            msg_type = raw.get("type")
+            if msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+            elif msg_type == "replay_request":
+                # MVP: no replay buffer — return empty batch
+                await websocket.send_json(
+                    {
+                        "type": "replay_batch",
+                        "entries": [],
+                        "count": 0,
+                    }
+                )
+    except WebSocketDisconnect:
+        pass
 
 
 # ── Per-Agent Endpoint ─────────────────────────────────────────────
@@ -94,19 +244,24 @@ def _transform_metrics(
 async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
     """Real-time metrics for a specific GPU server.
 
-    Subscribes to the ``metrics:{agent_id}`` Redis channel and forwards
-    transformed metric snapshots to the dashboard client.
+    Subscribes to ``metrics:{agent_id}`` and ``vllm_metrics:{agent_id}``
+    Redis channels and forwards transformed metric snapshots to the
+    dashboard client.
     """
     await websocket.accept()
     logger.info("Dashboard WS connected for agent %s", agent_id)
 
-    channel = f"metrics:{agent_id}"
+    sid = str(agent_id)
+    channels = [
+        _METRICS_CHANNEL.format(id=sid),
+        _VLLM_METRICS_CHANNEL.format(id=sid),
+    ]
     pubsub = None
 
     try:
         if redis_client is not None:
             pubsub = redis_client.pubsub()
-            await pubsub.subscribe(channel)
+            await pubsub.subscribe(*channels)
         else:
             logger.warning(
                 "Redis unavailable — dashboard WS for agent %s will not receive data",
@@ -120,51 +275,12 @@ async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
                 await asyncio.get_running_loop().create_future()
                 return
 
-            async for message in pubsub.listen():
-                if message["type"] != "message":
-                    continue
-
-                raw_data = message.get("data")
-                if isinstance(raw_data, bytes):
-                    raw_data = raw_data.decode("utf-8")
-                if not isinstance(raw_data, str):
-                    continue
-
-                try:
-                    payload = json.loads(raw_data)
-                except json.JSONDecodeError:
-                    continue
-
-                transformed = _transform_metrics(payload, str(agent_id))
-                if transformed is not None:
-                    try:
-                        await websocket.send_json(transformed)
-                    except Exception:
-                        break  # Connection likely closed
-
-        async def client_reader() -> None:
-            """Read messages from the dashboard client (pings, replay requests)."""
-            try:
-                async for raw in websocket.iter_json():
-                    msg_type = raw.get("type")
-                    if msg_type == "ping":
-                        await websocket.send_json({"type": "pong"})
-                    elif msg_type == "replay_request":
-                        # MVP: no replay buffer — return empty batch
-                        await websocket.send_json(
-                            {
-                                "type": "replay_batch",
-                                "entries": [],
-                                "count": 0,
-                            }
-                        )
-            except WebSocketDisconnect:
-                pass
+            await _forward_pubsub_messages(pubsub, websocket, is_pattern=False)
 
         await asyncio.wait(
             [
                 asyncio.create_task(redis_reader()),
-                asyncio.create_task(client_reader()),
+                asyncio.create_task(_client_reader(websocket)),
             ],
             return_when=asyncio.FIRST_COMPLETED,
         )
@@ -176,7 +292,7 @@ async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
     finally:
         if pubsub is not None:
             try:
-                await pubsub.unsubscribe(channel)
+                await pubsub.unsubscribe(*channels)
                 await pubsub.aclose()  # type: ignore[no-untyped-call]
             except Exception:
                 logger.debug("Error cleaning up pubsub for agent %s", agent_id)
@@ -189,9 +305,9 @@ async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
 async def dashboard_ws_all(websocket: WebSocket) -> None:
     """Aggregate metrics for all registered agents.
 
-    Uses Redis ``PSUBSCRIBE`` to listen on the ``metrics:*`` pattern and
-    forwards transformed snapshots for *every* agent to the connected
-    dashboard client.
+    Uses Redis ``PSUBSCRIBE`` to listen on ``metrics:*`` and
+    ``vllm_metrics:*`` patterns and forwards transformed snapshots
+    for *every* agent to the connected dashboard client.
     """
     await websocket.accept()
     logger.info("Dashboard WS connected (all agents)")
@@ -201,7 +317,7 @@ async def dashboard_ws_all(websocket: WebSocket) -> None:
     try:
         if redis_client is not None:
             pubsub = redis_client.pubsub()
-            await pubsub.psubscribe("metrics:*")
+            await pubsub.psubscribe("metrics:*", "vllm_metrics:*")
         else:
             logger.warning("Redis unavailable — dashboard WS (all) will not receive data")
 
@@ -211,53 +327,12 @@ async def dashboard_ws_all(websocket: WebSocket) -> None:
                 await asyncio.get_running_loop().create_future()
                 return
 
-            async for message in pubsub.listen():
-                if message["type"] != "pmessage":
-                    continue
-
-                channel: str = message["channel"]
-                agent_id = channel.split(":", 1)[1] if ":" in channel else "unknown"
-
-                raw_data = message.get("data")
-                if isinstance(raw_data, bytes):
-                    raw_data = raw_data.decode("utf-8")
-                if not isinstance(raw_data, str):
-                    continue
-
-                try:
-                    payload = json.loads(raw_data)
-                except json.JSONDecodeError:
-                    continue
-
-                transformed = _transform_metrics(payload, agent_id)
-                if transformed is not None:
-                    try:
-                        await websocket.send_json(transformed)
-                    except Exception:
-                        break
-
-        async def client_reader() -> None:
-            """Read messages from the dashboard client."""
-            try:
-                async for raw in websocket.iter_json():
-                    msg_type = raw.get("type")
-                    if msg_type == "ping":
-                        await websocket.send_json({"type": "pong"})
-                    elif msg_type == "replay_request":
-                        await websocket.send_json(
-                            {
-                                "type": "replay_batch",
-                                "entries": [],
-                                "count": 0,
-                            }
-                        )
-            except WebSocketDisconnect:
-                pass
+            await _forward_pubsub_messages(pubsub, websocket, is_pattern=True)
 
         await asyncio.wait(
             [
                 asyncio.create_task(redis_reader()),
-                asyncio.create_task(client_reader()),
+                asyncio.create_task(_client_reader(websocket)),
             ],
             return_when=asyncio.FIRST_COMPLETED,
         )
