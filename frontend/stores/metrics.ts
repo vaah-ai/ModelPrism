@@ -43,12 +43,11 @@ export const useMetricsStore = defineStore('metrics', () => {
       buffers.value.set(agentId, buffer)
     }
 
-    buffer.points.push(point)
+    // Create new array reference to ensure Vue reactivity chain works
+    const next = [...buffer.points, point]
 
     // Trim to max length
-    if (buffer.points.length > buffer.maxLength) {
-      buffer.points = buffer.points.slice(-buffer.maxLength)
-    }
+    buffer.points = next.length > buffer.maxLength ? next.slice(-buffer.maxLength) : next
 
     // Force reactivity
     buffers.value = new Map(buffers.value)
@@ -65,12 +64,11 @@ export const useMetricsStore = defineStore('metrics', () => {
       buffers.value.set(agentId, buffer)
     }
 
-    buffer.points.push(...points)
+    // Create new array reference to ensure Vue reactivity chain works
+    const next = [...buffer.points, ...points]
 
     // Trim to max length
-    if (buffer.points.length > buffer.maxLength) {
-      buffer.points = buffer.points.slice(-buffer.maxLength)
-    }
+    buffer.points = next.length > buffer.maxLength ? next.slice(-buffer.maxLength) : next
 
     buffers.value = new Map(buffers.value)
   }

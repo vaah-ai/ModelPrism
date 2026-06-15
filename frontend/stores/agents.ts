@@ -201,6 +201,7 @@ export const useAgentsStore = defineStore('agents', () => {
     // Actions
     setAgents,
     updateAgent,
+    upsertAgent,
     applyMetricDelta,
     updateAgentStatus,
     removeAgent,

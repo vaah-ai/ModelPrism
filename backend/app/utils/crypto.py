@@ -98,3 +98,31 @@ def generate_agent_id(uuid_obj: UUID) -> str:
         A string like ``"ag_1A2b3C4d5E6f7G8h"``.
     """
     return AGENT_ID_PREFIX + _uuid_to_base62(uuid_obj)
+
+
+def _base62_to_int(s: str) -> int:
+    """Decode a base-62 string back to an integer."""
+    value = 0
+    for char in s:
+        value = value * 62 + _BASE62_ALPHABET.index(char)
+    return value
+
+
+def parse_agent_id(raw: str) -> UUID:
+    """Parse an agent identifier string into a ``UUID``.
+
+    Accepts:
+    - A raw UUID string (e.g. ``"550e8400-e29b-41d4-a716-446655440000"``)
+    - A compact ``ag_``-prefixed base-62 ID (e.g. ``"ag_1A2b3C4d5E6f7G8h"``)
+
+    Returns:
+        The parsed ``UUID``.
+
+    Raises:
+        ValueError: If the string cannot be parsed as either format.
+    """
+    # Strip ag_ prefix if present
+    if raw.startswith(AGENT_ID_PREFIX):
+        return UUID(int=_base62_to_int(raw[len(AGENT_ID_PREFIX):]))
+    # Fall back to standard UUID parsing
+    return UUID(raw)

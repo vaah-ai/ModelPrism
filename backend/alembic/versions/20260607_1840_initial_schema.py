@@ -34,11 +34,6 @@ def upgrade() -> None:
     # Enable UUID generation extension
     op.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
 
-    # --- Enum types (must be created before tables that reference them) ---
-    op.execute("CREATE TYPE agentstatus AS ENUM ('online', 'offline')")
-    op.execute("CREATE TYPE tokenstatus AS ENUM ('pending', 'claimed', 'expired')")
-    op.execute("CREATE TYPE loglevel AS ENUM ('debug', 'info', 'warning', 'error')")
-
     # --- agents ---
     op.create_table(
         "agents",

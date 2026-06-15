@@ -24,6 +24,7 @@ from app.schemas.agent import (
 )
 from app.schemas.jsonapi import JSONAPIDocument, resource_from_orm
 from app.services import agent_manager
+from app.utils.crypto import parse_agent_id
 
 logger = logging.getLogger(__name__)
 
@@ -98,13 +99,20 @@ async def list_agents(db: DbDep) -> dict[str, Any]:
 @router.get("/{agent_id}", response_model=JSONAPIDocument)
 async def get_agent(
     db: DbDep,
-    agent_id: Annotated[UUID, Path(description="Agent UUID")],
+    agent_id: Annotated[str, Path(description="Agent UUID or ag_-prefixed ID")],
 ) -> dict[str, Any]:
     """Get a single agent's full details in JSON:API format.
 
     Returns all agent attributes including hardware specs.
     """
-    agent = await agent_manager.get_agent(db, agent_id)
+    try:
+        uuid = parse_agent_id(agent_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid agent ID format: {agent_id}",
+        )
+    agent = await agent_manager.get_agent(db, uuid)
     if agent is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -34,6 +34,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.redis import redis_client
 from app.schemas.dashboard_ws import DashboardMetricsMessage
+from app.utils.crypto import parse_agent_id
 from app.utils.metric_helpers import avg_gpu_field
 
 logger = logging.getLogger(__name__)
@@ -204,17 +205,27 @@ async def _client_reader(websocket: WebSocket) -> None:
 
 
 @router.websocket("/ws/dashboard/{agent_id}")
-async def dashboard_ws_agent(websocket: WebSocket, agent_id: UUID) -> None:
+async def dashboard_ws_agent(websocket: WebSocket, agent_id: str) -> None:
     """Real-time metrics for a specific GPU server.
 
     Subscribes to ``metrics:{agent_id}`` and ``vllm_metrics:{agent_id}``
     Redis channels and forwards ``DashboardMetricsMessage`` payloads to
     the dashboard client.
+
+    The ``agent_id`` may be a raw UUID or an ``ag_``-prefixed base-62 ID.
     """
     await websocket.accept()
-    logger.info("Dashboard WS connected for agent %s", agent_id)
 
-    sid = str(agent_id)
+    # Resolve the agent_id — if it's not a valid UUID or ag_-prefixed ID,
+    # treat it as a convenience pass-through so non-UUID route params
+    # still connect (the Redis channel will just never fire, which is fine).
+    try:
+        uuid = parse_agent_id(agent_id)
+        sid = str(uuid)
+    except ValueError:
+        sid = agent_id
+
+    logger.info("Dashboard WS connected for agent %s", sid)
     channels = [
         _METRICS_CHANNEL.format(id=sid),
         _VLLM_METRICS_CHANNEL.format(id=sid),

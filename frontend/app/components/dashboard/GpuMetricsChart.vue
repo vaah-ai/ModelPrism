@@ -31,6 +31,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import type { MetricPoint } from '~/types/dashboard'
+import uplot from 'uplot'
 
 const props = withDefaults(defineProps<{
   metricsHistory: MetricPoint[]
@@ -48,15 +49,18 @@ let resizeObserver: ResizeObserver | null = null
 const MAX_POINTS = 150
 
 const accentColor = computed(() => {
+  // Resolve CSS custom properties to actual color values for canvas rendering
+  const root = document.documentElement
+  const style = getComputedStyle(root)
   switch (props.chartType) {
     case 'gpuUtil':
-      return 'var(--accent)'
+      return style.getPropertyValue('--accent').trim() || '#0891b2'
     case 'vram':
-      return 'var(--info)'
+      return style.getPropertyValue('--info').trim() || '#2563eb'
     case 'throughput':
-      return 'var(--success)'
+      return style.getPropertyValue('--success').trim() || '#16a34a'
     case 'requests':
-      return 'var(--warning)'
+      return style.getPropertyValue('--warning').trim() || '#d97706'
   }
 })
 
@@ -109,8 +113,18 @@ function toColumnar(history: MetricPoint[]): (number[])[] {
   return [timestamps, ...values]
 }
 
+function resolveCssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}
+
 function getChartOptions() {
   const color = accentColor.value
+  const success = resolveCssVar('--success') || '#16a34a'
+  const warning = resolveCssVar('--warning') || '#d97706'
+  const textMuted = resolveCssVar('--text-muted') || '#a1a1aa'
+  const borderColor = resolveCssVar('--border-color') || '#e4e4e7'
+
+  const font = `10px ${resolveCssVar('--font-mono') || 'monospace'}`
 
   const series: any[] = [
     {},
@@ -119,12 +133,12 @@ function getChartOptions() {
   if (props.chartType === 'requests') {
     series.push({
       label: 'Running',
-      stroke: 'var(--success)',
+      stroke: success,
       width: 2,
     })
     series.push({
       label: 'Waiting',
-      stroke: 'var(--warning)',
+      stroke: warning,
       width: 2,
       fill: 'rgba(245, 158, 11, 0.1)',
     })
@@ -146,19 +160,30 @@ function getChartOptions() {
       drag: { x: false, y: false },
     },
     select: { show: false, left: 0, top: 0, width: 0, height: 0 },
-    legend: { show: props.chartType === 'requests' },
+    legend: { show: false },
     axes: [
       {
-        stroke: 'var(--text-muted)',
-        grid: { stroke: 'var(--border-color)', width: 1 },
-        ticks: { stroke: 'var(--border-color)' },
-        font: '10px var(--font-mono)',
+        stroke: textMuted,
+        grid: { stroke: borderColor, width: 1 },
+        ticks: { stroke: borderColor, size: 4 },
+        font,
+        // Limit x-axis time labels to 4 max to prevent overlap
+        values: (self, splits, axisIdx, foundSpace, foundIncr) => {
+          const step = Math.max(1, Math.floor(splits.length / 4))
+          return splits.map((t, i) => {
+            if (i % step !== 0) return ''
+            const d = new Date(t * 1000)
+            const h = d.getHours().toString().padStart(2, '0')
+            const m = d.getMinutes().toString().padStart(2, '0')
+            return h + ':' + m
+          })
+        },
       },
       {
-        stroke: 'var(--text-muted)',
-        grid: { stroke: 'var(--border-color)', width: 1 },
-        ticks: { stroke: 'var(--border-color)' },
-        font: '10px var(--font-mono)',
+        stroke: textMuted,
+        grid: { stroke: borderColor, width: 1 },
+        ticks: { stroke: borderColor, size: 4 },
+        font,
       },
     ],
     series,
@@ -175,14 +200,10 @@ function initChart() {
   }
 
   const opts = getChartOptions()
-  const data = toColumnar(props.metricsHistory.slice(-MAX_POINTS))
+  const initialData = toColumnar(props.metricsHistory.slice(-MAX_POINTS))
 
-  // uPlot uses constructor: new uPlot(opts, data, container)
-  // We use dynamic import to avoid SSR issues in Nuxt
-  import('uplot').then((uplotModule) => {
-    const uplot = uplotModule.default || uplotModule
-    chart = new uplot(opts, data, chartContainer.value!)
-  })
+  // uPlot constructor: new uPlot(opts, data, container)
+  chart = new uplot(opts, initialData, chartContainer.value!)
 }
 
 function updateChart() {
@@ -199,13 +220,12 @@ function handleResize() {
   })
 }
 
-// Watch metrics history and update chart
+// Watch metrics history length — detects new array references from store
 watch(
-  () => props.metricsHistory,
+  () => props.metricsHistory.length,
   () => {
     updateChart()
   },
-  { deep: true },
 )
 
 onMounted(() => {

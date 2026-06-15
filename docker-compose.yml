@@ -1,0 +1,35 @@
+# ──────────────────────────────────────────────────────────────────────
+# ModelPrism — Local Development Infrastructure
+# PostgreSQL + Redis for local development.
+# ──────────────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: modelprism-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: modelprism
+      POSTGRES_PASSWORD: modelprism
+      POSTGRES_DB: modelprism
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U modelprism -d modelprism"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: modelprism-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
